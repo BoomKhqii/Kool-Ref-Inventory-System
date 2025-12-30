@@ -9,23 +9,52 @@ Add inventory
 Minus inventory - the selected inventory
 
 -->
-<button id="openBtn">Open Pop-up</button>
-
-<dialog id="myWindow">
-    <h2>Settings</h2>
-    <p>This is a true window pop-up!</p>
-    <button id="closeBtn">Close</button>
+<button id="addButton">+</button>
+<dialog id="addWindow">
+    <h2>In/Out</h2>
+    <table class="inventory-table">
+        <form action="/action_page.php">
+            <thead>
+                <tr>
+                    <th><label for="item">Item</label></th>
+                    <th><label for="description">Description</label></th>
+                    <th><label for="supplier">Supplier</label></th>
+                    <th><label for="date">Date of Purchase</label></th>
+                    <th><label for="quantity">Quantity</label></th>
+                    <th><label for="price">Price</label></th>
+                    <th><label for="referenceNum">Reference number</label></th>
+                    <th><label for="inOut">In/Out</label></th>
+                    <th><label for="status">Status</label></th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><input type="text" id="item" name="item"></td>
+                    <td><input type="text" id="description" name="description"></td>
+                    <td><input type="text" id="supplier" name="supplier"></td>
+                    <td><input type="text" id="date" name="date"></td>
+                    <td><input type="text" id="quantity" name="quantity"></td>
+                <td><input type="text" id="price" name="price"></td>
+                <td><input type="text" id="referenceNum" name="referenceNum"></td>
+                <td><input type="text" id="inOut" name="inOut"></td>
+                <td><input type="text" id="status" name="status"></td>
+                </tr>
+            </tbody>
+        </form>
+    </table>
+    <button id="closeWindow">Close</button>
 </dialog>
+
 <script>
-    const openBtn = document.getElementById("openBtn");
-    const closeBtn = document.getElementById("closeBtn");
-    const myWindow = document.getElementById("myWindow");
-    openBtn.addEventListener("click", () => {
-        myWindow.showModal();
+    const addButton = document.getElementById("addButton");
+    const closeWindow = document.getElementById("closeWindow");
+    const addWindow = document.getElementById("addWindow");
+    addButton.addEventListener("click", () => {
+        addWindow.showModal();
     });
-    closeBtn.addEventListener("click", () => {
-        myWindow.close();
-        });    
+    closeWindow.addEventListener("click", () => {
+        addWindow.close();
+        });
 </script>
 
 <table class="inventory-table">
