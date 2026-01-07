@@ -1,0 +1,92 @@
+﻿@page
+<h1>@ViewData["Title"]</h1>
+
+<!--
+
+Todo: 
+Add inventory
+    -Pop up window to add another inventory
+Minus inventory - the selected inventory
+
+-->
+<button id="addButton">+</button>
+<dialog id="addWindow">
+    <h2>In/Out</h2>
+    <table class="inventory-table">
+        <form action="/action_page.php">
+            <thead>
+                <tr>
+                    <th><label for="item">Item Name</label></th>
+                    <th><label for="description">Description</label></th>
+                    <th><label for="supplier">Supplier Name</label></th>
+                    <th><label for="date">Date of Purchase</label></th>
+                    <th><label for="quantity">Quantity</label></th>
+                    <th><label for="price">Price</label></th>
+                    <th><label for="referenceNum">Delivery Receipt Number</label></th>
+                    <th><label for="inOut">In/Out</label></th>
+                    <th><label for="location">Location</label></th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><input type="text" id="item" name="item"></td>
+                    <td><input type="text" id="description" name="description"></td>
+                    <td><input type="text" id="supplier" name="supplier"></td>
+                    <td><input type="text" id="date" name="date"></td>
+                    <td><input type="text" id="quantity" name="quantity"></td>
+                <td><input type="text" id="price" name="price"></td>
+                <td><input type="text" id="referenceNum" name="referenceNum"></td>
+                <td><input type="text" id="inOut" name="inOut"></td>
+                <td><input type="text" id="status" name="status"></td>
+                </tr>
+            </tbody>
+            <input type="submit" value="Add">
+        </form>
+    </table>
+    <button id="closeWindow">Close</button>
+</dialog>
+
+<script>
+    const addButton = document.getElementById("addButton");
+    const closeWindow = document.getElementById("closeWindow");
+    const addWindow = document.getElementById("addWindow");
+    addButton.addEventListener("click", () => {
+        addWindow.showModal();
+    });
+    closeWindow.addEventListener("click", () => {
+        addWindow.close();
+        });
+</script>
+
+<!--
+Non responsive table
+
+<table class="inventory-table">
+    <thead>
+        <tr>
+            <th>Item</th>
+            <th>Description</th>
+            <th>Supplier</th>
+            <th>Date of Purchase</th>
+            <th>Quantity</th>
+            <th>Price</th>
+            <th>Reference Number</th>
+            <th>In/Out</th>
+            <th>Status</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>CNF-223i</td>
+            <td>8 cu.ft. no-frost inverter</td>
+            <td>Condura</td>
+            <td>01/15/2023</td>
+            <td>10</td>
+            <td>$3,066.18</td>
+            <td>REF123456</td>
+            <td>Out</td>
+            <td>SMDC Light Mall</td>
+        </tr>
+    </tbody>
+</table>
+-->
