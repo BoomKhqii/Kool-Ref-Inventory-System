@@ -13,7 +13,7 @@ Minus inventory - the selected inventory
 <dialog id="addWindow">
     <h2>In/Out</h2>
     <table class="inventory-table">
-        <form action="/action_page.php">
+        <form>
             <thead>
                 <tr>
                     <th><label for="item">Item Name</label></th>
@@ -30,14 +30,14 @@ Minus inventory - the selected inventory
             <tbody>
                 <tr>
                     <td><input type="text" id="item" name="item"></td>
-                    <td><input type="text" id="description" name="description"></td>
+                    <td><textarea name="description" rows="1" cols="50"></textarea></td>
                     <td><input type="text" id="supplier" name="supplier"></td>
-                    <td><input type="text" id="date" name="date"></td>
-                    <td><input type="text" id="quantity" name="quantity"></td>
-                <td><input type="text" id="price" name="price"></td>
-                <td><input type="text" id="referenceNum" name="referenceNum"></td>
-                <td><input type="text" id="inOut" name="inOut"></td>
-                <td><input type="text" id="status" name="status"></td>
+                    <td><input type="datetime-local" id="date" name="date"></td>
+                    <td><input type="number" id="quantity" name="quantity"></td>
+                    <td><input type="number" step="0.01" id="price" name="price"></td>
+                    <td><input type="number" id="referenceNum" name="referenceNum"></td>
+                    <td><input type="checkbox" id="inOut" name="inOut"></td>
+                    <td><input type="text" id="status" name="status"></td>
                 </tr>
             </tbody>
             <input type="submit" value="Add">
@@ -57,6 +57,8 @@ Minus inventory - the selected inventory
         addWindow.close();
         });
 </script>
+
+
 
 <!--
 Non responsive table
