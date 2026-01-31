@@ -29,66 +29,83 @@ namespace Kool_Ref_Inventory_System.Model
 {
     public class userController
     {
-        /*
-        public void OnGet()
-        {
-            using var conn = new MySqlConnection(
-                "server=localhost;user=root;password=1234;database=testdb");
-            // Server=localhost\SQLEXPRESS01;Database=master;Trusted_Connection=True;
 
-            conn.Open();
-        }
+        [BindProperty]
+        public string Item { get; set; }
+        [BindProperty]
+        public string Description { get; set; }
+        [BindProperty]
+        public string Supplier { get; set; }
+        [BindProperty]
+        public int Quantity { get; set; }
+        [BindProperty]
+        public int Price { get; set; }
+        [BindProperty]
+        public bool InOut { get; set; }
+        [BindProperty]
+        public string Location { get; set; }
+
+        public void OnSubmit()
+        {
+        string sql = "INSERT INTO InandOutSystem (item, Description, supplier, quantity, price, inOut, location) VALUES ()";
+
+            /*
+            public void OnGet()
+            {
+                using var conn = new MySqlConnection(
+                    "server=localhost;user=root;password=1234;database=testdb");
+                // Server=localhost\SQLEXPRESS01;Database=master;Trusted_Connection=True;
+
+                conn.Open();
+            }
+            */
+            // Source - https://stackoverflow.com/a/1345531
+            // Posted by marc_s, modified by community. See post 'Timeline' for change history
+            // Retrieved 2026-01-04, License - CC BY-SA 4.0
+
+            //string connectionString = "server=localhost;database=Inventory;integrated Security=SSPI;";
+            //string connectionString = builder.Configuration.GetConnectionString("Inventory");
+            /*
+            using(SqlConnection _con = new SqlConnection(connectionString))
+            {
+               string queryStatement = "SELECT TOP 5 * FROM dbo.Customers ORDER BY CustomerID";
+
+               using(SqlCommand _cmd = new SqlCommand(queryStatement, _con))
+               {
+                  DataTable customerTable = new DataTable("Top5Customers");
+
+        SqlDataAdapter _dap = new SqlDataAdapter(_cmd);
+
+        _con.Open();
+                  _dap.Fill(customerTable);
+                  _con.Close();
+
+               }
+            }
         */
+            /*
+            [HttpPost]
+            public IActionResult UpdateStatus(int id, bool status)
+            {
+                string connString = "DESKTOP-8KJ2D7L";
 
+                using (SqlConnection conn = new SqlConnection(connString))
+                {
+                    // This is the SQL command sent to SSMS
+                    string sql = "UPDATE Users SET IsIn = @status WHERE UserID = @id";
+                    SqlCommand cmd = new SqlCommand(sql, conn);
 
-    // Source - https://stackoverflow.com/a/1345531
-    // Posted by marc_s, modified by community. See post 'Timeline' for change history
-    // Retrieved 2026-01-04, License - CC BY-SA 4.0
+                    cmd.Parameters.AddWithValue("@id", id);
+                    cmd.Parameters.AddWithValue("@status", status);
 
-    //string connectionString = "server=localhost;database=Inventory;integrated Security=SSPI;";
-    //string connectionString = builder.Configuration.GetConnectionString("Inventory");
+                    conn.Open();
+                    cmd.ExecuteNonQuery();
+                }
+                return Ok("Status Updated in SSMS!");
+            }*/
 
-    /*
-    using(SqlConnection _con = new SqlConnection(connectionString))
-    {
-       string queryStatement = "SELECT TOP 5 * FROM dbo.Customers ORDER BY CustomerID";
-
-       using(SqlCommand _cmd = new SqlCommand(queryStatement, _con))
-       {
-          DataTable customerTable = new DataTable("Top5Customers");
-
-SqlDataAdapter _dap = new SqlDataAdapter(_cmd);
-
-_con.Open();
-          _dap.Fill(customerTable);
-          _con.Close();
-
-       }
-    }
-*/
-
-
-    /*
-    [HttpPost]
-    public IActionResult UpdateStatus(int id, bool status)
-    {
-        string connString = "DESKTOP-8KJ2D7L";
-
-        using (SqlConnection conn = new SqlConnection(connString))
-        {
-            // This is the SQL command sent to SSMS
-            string sql = "UPDATE Users SET IsIn = @status WHERE UserID = @id";
-            SqlCommand cmd = new SqlCommand(sql, conn);
-
-            cmd.Parameters.AddWithValue("@id", id);
-            cmd.Parameters.AddWithValue("@status", status);
-
-            conn.Open();
-            cmd.ExecuteNonQuery();
         }
-        return Ok("Status Updated in SSMS!");
-    }*/
-    }    
+    }
 }
 /*
     public class UserStatus
