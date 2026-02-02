@@ -1,4 +1,5 @@
 ﻿@page
+@model InventoryModel
 <h1>@ViewData["Title"]</h1>
 
 <!--
@@ -13,7 +14,7 @@ Minus inventory - the selected inventory
 <dialog id="addWindow">
     <h2>In/Out</h2>
     <table class="inventory-table">
-        <form method="POST">
+        <form method="post" asp-page="Inventory">
             <thead>
                 <tr>
                     <th><label for="item">Item Name</label></th>
@@ -21,23 +22,22 @@ Minus inventory - the selected inventory
                     <th><label for="supplier">Supplier Name</label></th>
                     <th><label for="quantity">Quantity</label></th>
                     <th><label for="price">Price</label></th>
-                    <th><label for="referenceNum">Delivery Receipt Number</label></th>
                     <th><label for="inOut">In/Out</label></th>
                     <th><label for="location">Location</label></th>
                 </tr>
             </thead>
             <tbody>
                 <tr>
-                    <td><input type="text" id="item" name="item"></td>
-                    <td><textarea name="description" rows="1" cols="50"></textarea></td>
-                    <td><input type="text" id="supplier" name="supplier"></td>
-                    <td><input type="number" id="quantity" name="quantity"></td>
-                    <td><input type="number" step="0.01" id="price" name="price"></td>
-                    <td><input type="checkbox" id="inOut" name="inOut"></td>
-                    <td><input type="text" id="status" name="status"></td>
+                    <td><input type="text" id="item" asp-for="Item"></td>
+                    <td><textarea asp-for="Description" rows="1" cols="50"></textarea></td>
+                    <td><input type="text" id="supplier" asp-for="Supplier"></td>
+                    <td><input type="number" id="quantity" asp-for="Quantity"></td>
+                    <td><input type="number" step="0.01" id="price" asp-for="Price"></td>
+                    <td><input type="checkbox" id="inOut" asp-for="InOut"></td>
+                    <td><input type="text" id="location" asp-for="Location"></td>
                 </tr>
             </tbody>
-            <input type="submit" value="Add">
+            <button type="submit">Add to Inventory</button>
         </form>
     </table>
     <button id="closeWindow">Close</button>
