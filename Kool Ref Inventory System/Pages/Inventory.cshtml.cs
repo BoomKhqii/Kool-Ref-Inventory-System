@@ -20,7 +20,7 @@ namespace Kool_Ref_Inventory_System.Pages
         string connectionString = "Server=localhost\\SQLEXPRESS;Database=master;Trusted_Connection=True;TrustServerCertificate=True;";
         public List<Items> Inventory { get; set; }
 
-        public void OnPost()
+        public IActionResult OnPost()
         {
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
@@ -49,6 +49,8 @@ namespace Kool_Ref_Inventory_System.Pages
                     cmd.ExecuteNonQuery();
                 }
             }
+
+            return RedirectToPage("/Inventory");
         }
 
         public void OnGet()
