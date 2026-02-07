@@ -10,9 +10,9 @@ Add inventory
 Minus inventory - the selected inventory
 
 -->
-<button id="addButton">+</button>
-<dialog id="addWindow">
-    <h2>In/Out</h2>
+<button id="drAdd">Add Delivery Receipt</button>
+<dialog id="drWindow">
+    <h2>Delivery Receipt</h2>
     <table class="inventory-table">
         <form method="post" asp-page="Inventory">
             <thead>
@@ -22,8 +22,8 @@ Minus inventory - the selected inventory
                     <th><label for="supplier">Supplier Name</label></th>
                     <th><label for="quantity">Quantity</label></th>
                     <th><label for="price">Price</label></th>
-                    <th><label for="inOut">In/Out</label></th>
                     <th><label for="location">Location</label></th>
+                    <th><label for="dr">Delivery Receipt</label></th>
                 </tr>
             </thead>
             <tbody>
@@ -33,25 +33,67 @@ Minus inventory - the selected inventory
                     <td><input type="text" id="supplier" asp-for="Supplier"></td>
                     <td><input type="number" id="quantity" asp-for="Quantity"></td>
                     <td><input type="number" step="0.01" id="price" asp-for="Price"></td>
-                    <td><input type="checkbox" id="inOut" asp-for="InOut"></td>
                     <td><input type="text" id="location" asp-for="Location"></td>
+                    <td><input type="number" id="dr" asp-for="DeliveryReceipt"></td>
                 </tr>
             </tbody>
             <button type="submit">Add to Inventory</button>
         </form>
     </table>
-    <button id="closeWindow">Close</button>
+    <button id="drClose">Close</button>
 </dialog>
 
+
+<button id="ivAdd">Add In Voice</button>
+<dialog id="ivWindow">
+    <h2>In Voice</h2>
+    <table class="inventory-table">
+        <form method="post" asp-page="Inventory">
+        <thead>
+            <tr>
+                <th><label for="item">Item Name</label></th>
+                <th><label for="description">Description</label></th>
+                <th><label for="supplier">Supplier Name</label></th>
+                <th><label for="quantity">Quantity</label></th>
+                <th><label for="price">Price</label></th>
+                <th><label for="location">Location</label></th>
+                <th><label for="iv">In Voice</label></th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><input type="text" id="item" asp-for="Item"></td>
+                <td><textarea asp-for="Description" rows="1" cols="50"></textarea></td>
+                <td><input type="text" id="supplier" asp-for="Supplier"></td>
+                <td><input type="number" id="quantity" asp-for="Quantity"></td>
+                <td><input type="number" step="0.01" id="price" asp-for="Price"></td>
+                <td><input type="text" id="location" asp-for="Location"></td>
+                <td><input type="number" id="iv" asp-for="InVoice"></td>
+            </tr>
+        </tbody>
+        <button type="submit">Add to Inventory</button>
+        </form>
+    </table>
+    <button id="ivClose">Close</button>
+</dialog>
+
+
 <script>
-    const addButton = document.getElementById("addButton");
-    const closeWindow = document.getElementById("closeWindow");
-    const addWindow = document.getElementById("addWindow");
-    addButton.addEventListener("click", () => {
-        addWindow.showModal();
+    const drAdd = document.getElementById("drAdd"), drClose = document.getElementById("drClose"), drWindow = document.getElementById("drWindow");
+    const ivAdd = document.getElementById("ivAdd"), ivClose = document.getElementById("ivClose"), ivWindow = document.getElementById("ivWindow");
+
+    drAdd.addEventListener("click", () => {
+        drWindow.showModal();
     });
-    closeWindow.addEventListener("click", () => {
-        addWindow.close();
+    drClose.addEventListener("click", () => {
+        drWindow.close();
+        });
+
+    ivAdd.addEventListener("click", () => {
+        ivWindow.showModal();
+    });
+    ivClose.addEventListener("click", () => {
+        ivWindow.close();
         });
 </script>
 

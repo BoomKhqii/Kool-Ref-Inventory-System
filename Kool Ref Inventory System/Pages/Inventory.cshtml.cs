@@ -14,20 +14,18 @@ namespace Kool_Ref_Inventory_System.Pages
         [BindProperty] public string Supplier { get; set; }
         [BindProperty] public int Quantity { get; set; }
         [BindProperty] public decimal Price { get; set; }
-        [BindProperty] public bool InOut { get; set; }
         [BindProperty] public string Location { get; set; }
+        [BindProperty] public int DeliveryReceipt { get; set; }
+        [BindProperty] public int InVoice { get; set; }
 
-        public string Message { get; set; }
         public void OnPost()
         {
-            Debug.WriteLine("onpost called");
-
             string connectionString = "Server=localhost\\SQLEXPRESS;Database=master;Trusted_Connection=True;TrustServerCertificate=True;";
 
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
                 conn.Open();
-                string query = "INSERT INTO dbo.InandOutSystem (Item, Description, Supplier, Quantity, Price, InOut, Location) VALUES (@item, @description, @supplier, @quantity, @price, @inOut, @location)";
+                string query = "INSERT INTO dbo.InandOutSystem (Item, Description, Supplier, Quantity, Price, Location, DeliveryReceipt, InVoice) VALUES (@item, @description, @supplier, @quantity, @price, @location, @deliveryReceipt, @inVoice)";
 
                 using (SqlCommand cmd = new SqlCommand(query, conn))
                 {
@@ -36,13 +34,21 @@ namespace Kool_Ref_Inventory_System.Pages
                     cmd.Parameters.AddWithValue("@supplier", Supplier);
                     cmd.Parameters.AddWithValue("@quantity", Quantity);
                     cmd.Parameters.AddWithValue("@price", Price);
-                    cmd.Parameters.AddWithValue("@inOut", InOut);
                     cmd.Parameters.AddWithValue("@location", Location);
+                    if (DeliveryReceipt == 0)
+                    {
+
+                        cmd.Parameters.AddWithValue("@deliveryReceipt", DBNull.Value);
+                        cmd.Parameters.AddWithValue("@inVoice", InVoice);
+                    }
+                    else
+                    {
+                        cmd.Parameters.AddWithValue("@inVoice", DBNull.Value);
+                        cmd.Parameters.AddWithValue("@deliveryReceipt", DeliveryReceipt);
+                    }
                     cmd.ExecuteNonQuery();
                 }
             }
-
-            Message = "Data submitted successfully!";
         }
 
 
