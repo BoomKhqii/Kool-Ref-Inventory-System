@@ -1,7 +1,6 @@
 ﻿@page
 @model InventoryModel
 <h1>@ViewData["Title"]</h1>
-
 <!--
 
 Todo: 
@@ -40,8 +39,6 @@ Minus inventory - the selected inventory
         </form>
     </table>
 </dialog>
-
-
 <button id="ivAdd">Add In Voice</button>
 <dialog id="ivWindow">
     <h2>In Voice <button id="ivClose">Close</button></h2>
@@ -73,8 +70,6 @@ Minus inventory - the selected inventory
         </form>
     </table>
 </dialog>
-
-
 <script>
     const drAdd = document.getElementById("drAdd"), drClose = document.getElementById("drClose"), drWindow = document.getElementById("drWindow");
     const ivAdd = document.getElementById("ivAdd"), ivClose = document.getElementById("ivClose"), ivWindow = document.getElementById("ivWindow");
@@ -94,37 +89,34 @@ Minus inventory - the selected inventory
         });
 </script>
 
-
-
-<!--
-Non responsive table
-
 <table class="inventory-table">
     <thead>
         <tr>
             <th>Item</th>
             <th>Description</th>
             <th>Supplier</th>
-            <th>Date of Purchase</th>
             <th>Quantity</th>
             <th>Price</th>
-            <th>Reference Number</th>
-            <th>In/Out</th>
-            <th>Status</th>
+            <th>Location</th>
+            <th>dr</th>
+            <th>iv</th>
+            
         </tr>
     </thead>
     <tbody>
-        <tr>
-            <td>CNF-223i</td>
-            <td>8 cu.ft. no-frost inverter</td>
-            <td>Condura</td>
-            <td>01/15/2023</td>
-            <td>10</td>
-            <td>$3,066.18</td>
-            <td>REF123456</td>
-            <td>Out</td>
-            <td>SMDC Light Mall</td>
-        </tr>
+        @foreach (var item in Model.Inventory)
+        {
+            <tr>
+                <td>@item.Item</td>
+                <td>@item.Description</td>
+                <td>@item.Supplier</td>
+                <td>@item.Quantity</td>
+                <td>@item.Price.ToString("C")</td>
+                <td>@item.Location</td>
+                <td>@item.DeliveryReceipt</td>
+                <td>@item.InVoice</td>
+            </tr>
+        }
     </tbody>
 </table>
--->
+
