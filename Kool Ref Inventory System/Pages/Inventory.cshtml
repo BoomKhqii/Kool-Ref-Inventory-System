@@ -5,9 +5,11 @@
 
 Todo: 
 Add inventory
-    -Pop up window to add another inventory
-Minus inventory - the selected inventory
-
+    -Filter: DR or IV
+    -Search
+    - Service Report
+    - User 
+    - Table: include date
 -->
 <button id="drAdd">Add Delivery Receipt</button>
 <dialog id="drWindow">
@@ -95,6 +97,7 @@ Minus inventory - the selected inventory
             <th>Item</th>
             <th>Description</th>
             <th>Supplier</th>
+            <th>Date</th>
             <th>Quantity</th>
             <th>Price</th>
             <th>Location</th>
@@ -110,6 +113,7 @@ Minus inventory - the selected inventory
                 <td>@item.Item</td>
                 <td>@item.Description</td>
                 <td>@item.Supplier</td>
+                <td>@item.Date</td>
                 <td>@item.Quantity</td>
                 <td>@item.Price.ToString("C")</td>
                 <td>@item.Location</td>

@@ -72,6 +72,7 @@ namespace Kool_Ref_Inventory_System.Pages
                                 Item = reader["Item"].ToString(),
                                 Description = reader["Description"].ToString(),
                                 Supplier = reader["Supplier"].ToString(),
+                                Date = Convert.ToDateTime(reader["Date"]).ToString("yyyy-MM-dd"),
                                 Quantity = Convert.ToInt32(reader["Quantity"]),
                                 Price = Convert.ToDecimal(reader["Price"]),
                                 Location = reader["Location"].ToString(),
@@ -90,6 +91,7 @@ namespace Kool_Ref_Inventory_System.Pages
         public string Item { get; set; }
         public string Description { get; set; }
         public string Supplier { get; set; }
+        public string Date { get; set; }
         public int Quantity { get; set; }
         public decimal Price { get; set; }
         public string Location { get; set; }
