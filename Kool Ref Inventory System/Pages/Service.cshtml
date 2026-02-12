@@ -1,0 +1,87 @@
+﻿@page
+@model Kool_Ref_Inventory_System.Pages.ServiceModel
+
+</dialog>
+<script>
+    const add = document.getElementById("add"), close = document.getElementById("close"), window = document.getElementById("window");
+
+    add.addEventListener("click", () => {
+        window.showModal();
+    });
+    close.addEventListener("click", () => {
+        window.close();
+        });
+</script>
+
+
+<button id="add">Add Service Report</button>
+<dialog id="window">
+    <h2>Service Report <button id="close">Close</button></h2>
+    <table class="service-table">
+        <form method="post" asp-page="Inventory">
+            <label for="item">Item Name</label><br>
+            <input type="text" id="item" asp-for="WorkScope"><br>
+
+            <label for="description">Description</label><br>
+            <textarea asp-for="TimeIn" rows="1" cols="50"></textarea><br>
+
+            <label for="supplier">Supplier Name</label><br>
+            <input type="text" id="supplier" asp-for="TimeOut"><br>
+
+            <label for="quantity">Quantity</label><br>
+            <input type="number" id="quantity" asp-for="DateStarted"><br>
+
+            <label for="price">Price</label><br>
+            <input type="number" step="0.01" id="price" asp-for="DateEnded"><br>
+
+            <label for="location">Location</label><br>
+            <input type="text" id="location" asp-for="DeliveryReceipt"><br>
+
+            <label for="dr">Delivery Receipt</label><br>
+            <input type="number" id="dr" asp-for="InVoice"><br>
+            <label for="dr">Delivery Receipt</label><br>
+            <input type="number" id="dr" asp-for="Customer"><br>
+            <label for="dr">Delivery Receipt</label><br>
+            <input type="number" id="dr" asp-for="Address"><br>
+
+            <button type="submit">Add to Inventory</button>
+        </form>
+    </table>
+</dialog>
+
+
+
+
+<table class="general-table">
+    <thead>
+        <tr>
+            <th>Work Scope</th>
+            <th>Time In</th>
+            <th>Time Out</th>
+            <th>Date Started</th>
+            <th>Date Ended</th>
+            <th>Customer</th>
+            <th>Address</th>
+            <th>Technicians</th>
+            <th>IUD</th>
+            <!--
+                if value of dr != null 
+                    input value
+                else
+                    input iv value
+
+                Color: Blue-out | Green-in
+            -->
+            <th>Item</th>
+            <th>Description</th>
+            <th>Supplier</th>
+            <th>Date</th>
+            <th>Quantity</th>
+            <th>Price</th>
+            <th>Location</th>
+        </tr>
+    </thead>
+    <tbody>
+
+    </tbody>
+</table>
