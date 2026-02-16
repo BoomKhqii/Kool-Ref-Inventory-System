@@ -1,7 +1,6 @@
 ﻿@page
 @model Kool_Ref_Inventory_System.Pages.ServiceModel
 
-</dialog>
 <script>
     const add = document.getElementById("add"), close = document.getElementById("close"), window = document.getElementById("window");
 
@@ -49,12 +48,10 @@
     </table>
 </dialog>
 
-
-
-
 <table class="general-table">
     <thead>
         <tr>
+            <th>Technicians</th>
             <th>Work Scope</th>
             <th>Time In</th>
             <th>Time Out</th>
@@ -62,7 +59,6 @@
             <th>Date Ended</th>
             <th>Customer</th>
             <th>Address</th>
-            <th>Technicians</th>
             <th>IUD</th>
             <!--
                 if value of dr != null 
@@ -82,6 +78,35 @@
         </tr>
     </thead>
     <tbody>
+        <tr>
+            <td>
+                @foreach (var name in Model.Technicians)
+                {
+                    @name <br/>
+                }
+            </td>
+            @foreach (var service in Model.ServiceReport)
+            {
+                <td>@service.WorkScope</td>
+                <td>@service.TimeIn</td>
+                <td>@service.TimeOut</td>
+                <td>@service.DateStarted</td>
+                <td>@service.DateEnded</td>
+                <td>@service.Customer</td>
+                <td>@service.Address</td>
+                <td>@service.IUD</td>
+            } 
 
+            @foreach (var item in Model.Inventory)
+            {
+                <td>@item.Item</td>
+                <td>@item.Description</td>
+                <td>@item.Supplier</td>
+                <td>@item.Date</td>
+                <td>@item.Quantity</td>
+                <td>@item.Price.ToString("C")</td>
+                <td>@item.Location</td>
+            }
+        </tr>
     </tbody>
 </table>
