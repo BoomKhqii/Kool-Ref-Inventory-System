@@ -1,6 +1,142 @@
 ﻿@page
 @model Kool_Ref_Inventory_System.Pages.ServiceModel
 
+<button id="drAdd">Add Delivery Receipt</button>
+<dialog id="drWindow">
+    <h2>Delivery Receipt <button id="drClose">Close</button></h2>
+    <table class="inventory-table">
+        <form method="post" asp-page="Service">
+            <label for="workscope">Work Scope</label><br>
+            <input type="text" id="workscope" asp-for="WorkScope"><br>
+
+            <label for="timein">Time In</label><br>
+            <input type="time" id="timein" asp-for="TimeIn"><br>
+
+            <label for="timeout">Time Out</label><br>
+            <input type="time" id="timeout" asp-for="TimeOut"><br>
+
+            <label for="datestarted">Date Started</label><br>
+            <input type="date" id="datestarted" asp-for="DateStarted"><br>
+
+            <label for="dateended">Date Ebded</label><br>
+            <input type="date" id="dateended" asp-for="DateEnded"><br>
+
+            <label for="customer">Customer Name</label><br>
+            <input type="text" id="customer" asp-for="Customer"><br>
+
+            <label for="address">Address</label><br>
+            <input type="text" id="address" asp-for="Address"><br>
+
+            <div id="technician-list">
+                <label>Technicians</label>
+                <div class="input-group mb-2">
+                    <input type="text" name="InputTechnician" class="form-control" asp-for="InputTechnician" placeholder="Enter name"/>
+                    <button type="button" class="btn btn-danger" onclick="removeRow(this)">Remove</button>
+                </div>
+            </div>
+
+            <button type="button" class="btn btn-success" onclick="addRow()">+ Add Technician</button><br>
+
+            <label for="item">Item Name</label><br>
+            <input type="text" id="item" asp-for="Item"><br>
+
+            <label for="description">Description</label><br>
+            <textarea asp-for="Description" rows="1" cols="50"></textarea><br>
+
+            <label for="supplier">Supplier Name</label><br>
+            <input type="text" id="supplier" asp-for="Supplier"><br>
+
+            <label for="quantity">Quantity</label><br>
+            <input type="number" id="quantity" asp-for="Quantity"><br>
+
+            <label for="price">Price</label><br>
+            <input type="number" step="0.01" id="price" asp-for="Price"><br>
+
+            <label for="location">Location</label><br>
+            <input type="text" id="location" asp-for="Location"><br>
+
+            <label for="dr">Delivery Receipt</label><br>
+            <input type="number" id="dr" asp-for="DeliveryReceipt"><br>
+
+            <button type="submit">Add Report</button>
+        </form>
+    </table>
+</dialog>
+<button id="ivAdd">Add In Voice</button>
+<dialog id="ivWindow">
+    <h2>In Voice <button id="ivClose">Close</button></h2>
+    <table class="inventory-table">
+        <form method="post" asp-page="Service">
+
+            <label for="item">Item Name</label><br>
+            <input type="text" id="item" asp-for="Item"><br>
+
+            <label for="description">Description</label><br>
+            <textarea asp-for="Description" rows="1" cols="50"></textarea><br>
+
+            <label for="supplier">Supplier Name</label><br>
+            <input type="text" id="supplier" asp-for="Supplier"><br>
+
+            <label for="quantity">Quantity</label><br>
+            <input type="number" id="quantity" asp-for="Quantity"><br>
+
+            <label for="price">Price</label><br>
+            <input type="number" step="0.01" id="price" asp-for="Price"><br>
+
+            <label for="location">Location</label><br>
+            <input type="text" id="location" asp-for="Location"><br>
+
+            <label for="iv">In Voice</label><br>
+            <input type="number" id="iv" asp-for="InVoice"><br>
+
+        <button type="submit">Add Report</button>
+        </form>
+    </table>
+</dialog>
+<script>
+    const drAdd = document.getElementById("drAdd"), drClose = document.getElementById("drClose"), drWindow = document.getElementById("drWindow");
+    const ivAdd = document.getElementById("ivAdd"), ivClose = document.getElementById("ivClose"), ivWindow = document.getElementById("ivWindow");
+
+    drAdd.addEventListener("click", () => {
+        drWindow.showModal();
+    });
+    drClose.addEventListener("click", () => {
+        drWindow.close();
+        });
+
+    ivAdd.addEventListener("click", () => {
+        ivWindow.showModal();
+    });
+    ivClose.addEventListener("click", () => {
+        ivWindow.close();
+        });
+
+    function addRow() {
+        const container = document.getElementById('technician-list');
+    
+        // Create a new wrapper div
+        const row = document.createElement('div');
+        row.className = 'input-group mb-2';
+
+        // Add the input and the remove button
+        row.innerHTML = `
+            <input type="text" name="InputTechnician" class="form-control" placeholder="Enter name" />
+            <button type="button" class="btn btn-danger" onclick="removeRow(this)">Remove</button>
+        `;
+
+        container.appendChild(row);
+    }
+
+    function removeRow(button) {
+        // Prevent removing the very last input if you want at least one
+        const rows = document.querySelectorAll('.input-group');
+        if (rows.length > 1) {
+            button.parentElement.remove();
+        }
+    }
+</script>
+
+<!--
 <script>
     const add = document.getElementById("add"), close = document.getElementById("close"), window = document.getElementById("window");
 
@@ -47,6 +183,9 @@
         </form>
     </table>
 </dialog>
+
+
+-->
 
 <table class="general-table">
     <thead>
