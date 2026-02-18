@@ -5,6 +5,25 @@
 }
 
 <div class="text-center">
+
+    <table class="inventory-quantity-table">
+        <thead>
+            <tr>
+                <th>Item Name</th>
+                <th>Stocks</th>
+            </tr>
+        </thead>
+        <tbody>
+                @foreach (var display in Model.Index)
+                {
+                    <tr>
+                    <td>@display.Products</td>
+                    <td>@display.Quantities</td>
+                </tr>
+                }
+        </tbody>
+    </table>
+
     <h1 class="display-4">home or sum sh</h1>
     <p>New it</p>
     <h1 class="display-4">Sales</h1>

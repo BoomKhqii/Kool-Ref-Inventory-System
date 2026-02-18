@@ -38,24 +38,22 @@ namespace Kool_Ref_Inventory_System.Pages
                 using (SqlCommand cmd = new SqlCommand(query, conn))
                 {
                     // Existing Parameters
-                    cmd.Parameters.AddWithValue("@item", Item ?? (object)DBNull.Value);
-                    cmd.Parameters.AddWithValue("@description", Description ?? (object)DBNull.Value);
-                    cmd.Parameters.AddWithValue("@supplier", Supplier ?? (object)DBNull.Value);
+                    cmd.Parameters.AddWithValue("@item", Item);
+                    cmd.Parameters.AddWithValue("@description", Description);
+                    cmd.Parameters.AddWithValue("@supplier", Supplier);
                     cmd.Parameters.AddWithValue("@quantity", Quantity);
                     cmd.Parameters.AddWithValue("@price", Price);
-                    cmd.Parameters.AddWithValue("@location", Location ?? (object)DBNull.Value);
+                    cmd.Parameters.AddWithValue("@location", Location);
 
                     // --- NEW PARAMETERS START HERE ---
 
                     // Join the list of technicians into one string (Comma Separated)
-                    string techs = (InputTechnician != null && InputTechnician.Any())
-                                   ? string.Join(", ", InputTechnician)
-                                   : null;
+                    string techs = (InputTechnician != null && InputTechnician.Any()) ? string.Join(", ", InputTechnician) : null;
                     cmd.Parameters.AddWithValue("@technicians", techs ?? (object)DBNull.Value);
 
-                    cmd.Parameters.AddWithValue("@workScope", WorkScope ?? (object)DBNull.Value);
-                    cmd.Parameters.AddWithValue("@customer", Customer ?? (object)DBNull.Value);
-                    cmd.Parameters.AddWithValue("@address", Address ?? (object)DBNull.Value);
+                    cmd.Parameters.AddWithValue("@workScope", WorkScope);
+                    cmd.Parameters.AddWithValue("@customer", Customer);
+                    cmd.Parameters.AddWithValue("@address", Address);
 
                     // Handling Dates/Times (Checking for empty strings before sending to SQL)
                     cmd.Parameters.AddWithValue("@timeIn", string.IsNullOrEmpty(TimeIn) ? (object)DBNull.Value : TimeIn);
