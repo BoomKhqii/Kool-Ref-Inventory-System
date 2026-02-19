@@ -8,50 +8,9 @@ namespace Kool_Ref_Inventory_System.Pages
 {
     public class InventoryModel : PageModel
     {
-
-        [BindProperty] public string Item { get; set; }
-        [BindProperty] public string Description { get; set; }
-        [BindProperty] public string Supplier { get; set; }
-        [BindProperty] public int Quantity { get; set; }
-        [BindProperty] public decimal Price { get; set; }
-        [BindProperty] public string Location { get; set; }
-        [BindProperty] public int DeliveryReceipt { get; set; }
-        [BindProperty] public int InVoice { get; set; }
         string connectionString = "Server=localhost\\SQLEXPRESS;Database=master;Trusted_Connection=True;TrustServerCertificate=True;";
         public List<Items> Inventory { get; set; }
 
-        public IActionResult OnPost()
-        {
-            using (SqlConnection conn = new SqlConnection(connectionString))
-            {
-                conn.Open();
-                string query = "INSERT INTO dbo.InandOutSystem (Item, Description, Supplier, Quantity, Price, Location, DeliveryReceipt, InVoice) VALUES (@item, @description, @supplier, @quantity, @price, @location, @deliveryReceipt, @inVoice)";
-
-                using (SqlCommand cmd = new SqlCommand(query, conn))
-                {
-                    cmd.Parameters.AddWithValue("@item", Item);
-                    cmd.Parameters.AddWithValue("@description", Description);
-                    cmd.Parameters.AddWithValue("@supplier", Supplier);
-                    cmd.Parameters.AddWithValue("@quantity", Quantity);
-                    cmd.Parameters.AddWithValue("@price", Price);
-                    cmd.Parameters.AddWithValue("@location", Location);
-                    if (DeliveryReceipt == 0)
-                    {
-
-                        cmd.Parameters.AddWithValue("@deliveryReceipt", DBNull.Value);
-                        cmd.Parameters.AddWithValue("@inVoice", InVoice);
-                    }
-                    else
-                    {
-                        cmd.Parameters.AddWithValue("@inVoice", DBNull.Value);
-                        cmd.Parameters.AddWithValue("@deliveryReceipt", DeliveryReceipt);
-                    }
-                    cmd.ExecuteNonQuery();
-                }
-            }
-
-            return RedirectToPage("/Inventory");
-        }
 
         public void OnGet()
         {
