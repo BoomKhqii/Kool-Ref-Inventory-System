@@ -76,8 +76,9 @@ namespace Kool_Ref_Inventory_System.Pages
                                 Quantity = Convert.ToInt32(reader["Quantity"]),
                                 Price = Convert.ToDecimal(reader["Price"]),
                                 Location = reader["Location"].ToString(),
-                                DeliveryReceipt = reader["DeliveryReceipt"] == DBNull.Value ? 0 : Convert.ToInt32(reader["DeliveryReceipt"]),
-                                InVoice = reader["InVoice"] == DBNull.Value ? 0 : Convert.ToInt32(reader["InVoice"])
+                                IUD = reader["DeliveryReceipt"] != DBNull.Value
+                                  ? Convert.ToInt32(reader["DeliveryReceipt"])
+                                  : (reader["InVoice"] != DBNull.Value ? Convert.ToInt32(reader["InVoice"]) : 0)
                             });
                         }
                     }
@@ -95,6 +96,7 @@ namespace Kool_Ref_Inventory_System.Pages
         public int Quantity { get; set; }
         public decimal Price { get; set; }
         public string Location { get; set; }
+        public int IUD { get; set; }
         public int DeliveryReceipt { get; set; }
         public int InVoice { get; set; }
     }
