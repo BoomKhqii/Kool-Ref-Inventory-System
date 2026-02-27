@@ -33,24 +33,19 @@ namespace Kool_Ref_Inventory_System.Pages
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
                 conn.Open();
-                string query = "";
+                //string query = "";
+                string serviceQuery = @"
+                    INSERT INTO dbo.ServiceReport (WorkScope, TimeIn, TimeOut, DateStarted, DateEnded, Customer, Address, DeliveryReceipt, InVoice)
+                    VALUES (@workscope, @timeIn, @timeOut, @dateStarted, @dateEnded, @customer, @address, @deliveryReceipt, @inVoice);";
+                string inventoryQuery = @"
+                    INSERT INTO dbo.InandOutSystem (Item, Description, Supplier, Quantity, Price, Location, DeliveryReceipt, InVoice) 
+                    VALUES (@item, @description, @supplier, @quantity, @price, @location, @deliveryReceipt, @inVoice);";
+                string technicianListQuery = @"
+                    INSERT INTO dbo.TechnicianListOrders (Technicians0, Technicians1, Technicians2, Technicians3, Technicians4, Technicians5, Technicians6, Technicians7, Technicians8, Technicians9)
+                    VALUES (@technicians0, @technicians1, @technicians2, @technicians3, @technicians4, @technicians5, @technicians6, @technicians7, @technicians8, @technicians9);";
 
-                using (SqlCommand cmd = new SqlCommand(query, conn))
-                {
-                    // Existing Parameters
-                    cmd.Parameters.AddWithValue("@item", Item);
-                    cmd.Parameters.AddWithValue("@description", Description);
-                    cmd.Parameters.AddWithValue("@supplier", Supplier);
-                    cmd.Parameters.AddWithValue("@quantity", Quantity);
-                    cmd.Parameters.AddWithValue("@price", Price);
-                    cmd.Parameters.AddWithValue("@location", Location);
-
-                    // --- NEW PARAMETERS START HERE ---
-
-                    // Join the list of technicians into one string (Comma Separated)
-                    string techs = (InputTechnician != null && InputTechnician.Any()) ? string.Join(", ", InputTechnician) : null;
-                    cmd.Parameters.AddWithValue("@technicians", techs ?? (object)DBNull.Value);
-
+                using (SqlCommand cmd = new SqlCommand(serviceQuery, conn))
+                {                    
                     cmd.Parameters.AddWithValue("@workScope", WorkScope);
                     cmd.Parameters.AddWithValue("@customer", Customer);
                     cmd.Parameters.AddWithValue("@address", Address);
@@ -73,6 +68,72 @@ namespace Kool_Ref_Inventory_System.Pages
                     {
                         cmd.Parameters.AddWithValue("@inVoice", DBNull.Value);
                         cmd.Parameters.AddWithValue("@deliveryReceipt", DeliveryReceipt);
+                    }
+                /*
+                cmd.Parameters.AddWithValue("@item", Item);
+                cmd.Parameters.AddWithValue("@description", Description);
+                cmd.Parameters.AddWithValue("@supplier", Supplier);
+                cmd.Parameters.AddWithValue("@quantity", Quantity);
+                cmd.Parameters.AddWithValue("@price", Price);
+                cmd.Parameters.AddWithValue("@location", Location);
+                if (DeliveryReceipt == 0)
+                {
+
+                    cmd.Parameters.AddWithValue("@deliveryReceipt", DBNull.Value);
+                    cmd.Parameters.AddWithValue("@inVoice", InVoice);
+                }
+                else
+                {
+                    cmd.Parameters.AddWithValue("@inVoice", DBNull.Value);
+                    cmd.Parameters.AddWithValue("@deliveryReceipt", DeliveryReceipt);
+                }
+
+                 workscope
+                timein
+                timeout
+                date start
+                end
+                customer
+                address
+                technician
+                 */
+                cmd.ExecuteNonQuery();
+                }
+
+                using (SqlCommand cmd = new SqlCommand(inventoryQuery, conn))
+                {
+                    cmd.Parameters.AddWithValue("@item", Item);
+                    cmd.Parameters.AddWithValue("@description", Description);
+                    cmd.Parameters.AddWithValue("@supplier", Supplier);
+                    cmd.Parameters.AddWithValue("@quantity", Quantity);
+                    cmd.Parameters.AddWithValue("@price", Price);
+                    cmd.Parameters.AddWithValue("@location", Location);
+                    if (DeliveryReceipt == 0)
+                    {
+
+                        cmd.Parameters.AddWithValue("@deliveryReceipt", DBNull.Value);
+                        cmd.Parameters.AddWithValue("@inVoice", InVoice);
+                    }
+                    else
+                    {
+                        cmd.Parameters.AddWithValue("@inVoice", DBNull.Value);
+                        cmd.Parameters.AddWithValue("@deliveryReceipt", DeliveryReceipt);
+                    }
+                    cmd.ExecuteNonQuery();
+
+                }
+
+                using (SqlCommand cmd = new SqlCommand(technicianListQuery, conn))
+                {
+                    // Loop 10 times to fill @technicians0 through @technicians9
+                    for (int i = 0; i < 10; i++)
+                    {
+                        // Check if the list has an item at this index
+                        object value = (InputTechnician != null && InputTechnician.Count > i)
+                            ? (object)InputTechnician[i]
+                            : DBNull.Value;
+
+                        cmd.Parameters.AddWithValue($"@technicians{i}", value);
                     }
 
                     cmd.ExecuteNonQuery();
@@ -109,7 +170,14 @@ namespace Kool_Ref_Inventory_System.Pages
             {
                 conn.Open();
                 //string query = "SELECT * FROM dbo.InandOutSystem";
-                string query = "SELECT * FROM dbo.ServiceReport JOIN dbo.TechnicianListOrders ON dbo.ServiceReport.JobOrder=dbo.TechnicianListOrders.JobOrder JOIN dbo.InandOutSystem ON dbo.ServiceReport.InVoice=dbo.InandOutSystem.inVoice";
+                //string query = "SELECT * FROM dbo.ServiceReport JOIN dbo.TechnicianListOrders ON dbo.ServiceReport.JobOrder=dbo.TechnicianListOrders.JobOrder JOIN dbo.InandOutSystem ON dbo.ServiceReport.InVoice=dbo.InandOutSystem.inVoice";
+                string query = @"
+                    SELECT * FROM dbo.ServiceReport 
+                    JOIN dbo.TechnicianListOrders 
+                        ON dbo.ServiceReport.JobOrder = dbo.TechnicianListOrders.JobOrder 
+                    JOIN dbo.InandOutSystem 
+                        ON (dbo.ServiceReport.InVoice = dbo.InandOutSystem.inVoice 
+                            OR dbo.ServiceReport.DeliveryReceipt = dbo.InandOutSystem.deliveryReceipt);";
 
                 using (SqlCommand cmd = new SqlCommand(query, conn))
                 {

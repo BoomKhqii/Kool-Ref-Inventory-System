@@ -141,61 +141,70 @@
         <tr>
             <th>Technicians</th>
             <th>Work Scope</th>
-            <th>Time In</th>
-            <th>Time Out</th>
-            <th>Date Started</th>
-            <th>Date Ended</th>
-            <th>Customer</th>
-            <th>Address</th>
+            <th>Time (In - Out)</th>
+            <th>Dates (Start - End)</th>
+            <th>Customer & Address</th>
             <th>IUD</th>
-            <!--
-                if value of dr != null 
-                    input value
-                else
-                    input iv value
-
-                Color: Blue-out | Green-in
-            -->
-            <th>Item</th>
-            <th>Description</th>
-            <th>Supplier</th>
-            <th>Date</th>
-            <th>Quantity</th>
-            <th>Price</th>
+            @* --- Inventory Starts Here --- *@
+            <th>Item Details</th>
+            <th>Supplier & Date</th>
+            <th>Qty & Price</th>
             <th>Location</th>
         </tr>
     </thead>
     <tbody>
-        <tr>
 
-            <td>
-                @foreach (var name in Model.Technicians)
+        @{
+            // Find which list is longer so we don't miss any data
+            int rowCount = Math.Max(Model.ServiceReport.Count, Model.Inventory.Count);
+        }
+
+        @for (int i = 0; i < rowCount; i++)
+        {
+            <tr>
+                <td>
+                    @if (i == 0)
+                    {
+                        foreach (var name in Model.Technicians)
+                        {
+                            <div>@name</div>
+                        }
+                    }
+                </td>
+
+                @if (i < Model.ServiceReport.Count)
                 {
-                    <p>@name</p>
+                    var service = Model.ServiceReport[i];
+                    <td>@service.WorkScope</td>
+                    <td>@service.TimeIn - @service.TimeOut</td>
+                    <td>@service.DateStarted - @service.DateEnded</td>
+                    <td>
+                        <strong>@service.Customer</strong><br />
+                        <small>@service.Address</small>
+                    </td>
+                    <td>@service.IUD</td>
                 }
-            </td>
-            @foreach (var service in Model.ServiceReport)
-            {
-                <td>@service.WorkScope</td>
-                <td>@service.TimeIn</td>
-                <td>@service.TimeOut</td>
-                <td>@service.DateStarted</td>
-                <td>@service.DateEnded</td>
-                <td>@service.Customer</td>
-                <td>@service.Address</td>
-                <td>@service.IUD</td>
-            } 
+                else
+                {
+                    <td colspan="5"></td> @* Fills the 5 service columns if empty *@
+                }
 
-            @foreach (var item in Model.Inventory)
-            {
-                <td>@item.Item</td>
-                <td>@item.Description</td>
-                <td>@item.Supplier</td>
-                <td>@item.Date</td>
-                <td>@item.Quantity</td>
-                <td>@item.Price.ToString("C")</td>
-                <td>@item.Location</td>
-            }
-        </tr>
+                @if (i < Model.Inventory.Count)
+                {
+                    var item = Model.Inventory[i];
+                    <td>
+                        <strong>@item.Item</strong><br />
+                        <small>@item.Description</small>
+                    </td>
+                    <td>@item.Supplier<br />@item.Date</td>
+                    <td>@item.Quantity x @item.Price.ToString("C")</td>
+                    <td>@item.Location</td>
+                }
+                else
+                {
+                    <td colspan="4"></td> @* Fills the 4 inventory columns if empty *@
+                }
+            </tr>
+        }
     </tbody>
 </table>
