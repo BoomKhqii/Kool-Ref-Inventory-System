@@ -167,7 +167,13 @@
     </thead>
     <tbody>
         <tr>
-            <td>@ViewBag.techs</td>
+
+            <td>
+                @foreach (var name in Model.Technicians)
+                {
+                    <p>@name</p>
+                }
+            </td>
             @foreach (var service in Model.ServiceReport)
             {
                 <td>@service.WorkScope</td>
