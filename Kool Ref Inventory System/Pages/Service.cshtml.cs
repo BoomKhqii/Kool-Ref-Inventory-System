@@ -26,8 +26,8 @@ namespace Kool_Ref_Inventory_System.Pages
         public List<Items> Inventory { get; set; }
         public List<Service> ServiceReport { get; set; }
         public List<string> Technicians { get; set; } = new List<string>();
-        string connectionString = "Server=localhost\\SQLEXPRESS;Database=master;Trusted_Connection=True;TrustServerCertificate=True;";
-        
+        string connectionString = "Server=localhost\\SQLEXPRESS;Database=Koolref;Trusted_Connection=True;TrustServerCertificate=True;";
+
         public IActionResult OnPost()
         {
             using (SqlConnection conn = new SqlConnection(connectionString))

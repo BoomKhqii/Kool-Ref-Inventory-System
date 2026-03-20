@@ -15,7 +15,8 @@ namespace Kool_Ref_Inventory_System.Pages
 
         [BindProperty] public string Products { get; set; }
         [BindProperty] public int Quantities { get; set; }
-        string connectionString = "Server=localhost\\SQLEXPRESS;Database=master;Trusted_Connection=True;TrustServerCertificate=True;";
+
+        string connectionString = "Server=localhost\\SQLEXPRESS;Database=Koolref;Trusted_Connection=True;TrustServerCertificate=True;";
         public List<Display> Index { get; set; } = new();
 
         public void OnGet()
