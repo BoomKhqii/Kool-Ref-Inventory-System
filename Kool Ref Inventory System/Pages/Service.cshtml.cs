@@ -10,8 +10,8 @@ namespace Kool_Ref_Inventory_System.Pages
         [BindProperty] public string WorkScope { get; set; }
         [BindProperty] public string TimeIn { get; set; }
         [BindProperty] public string TimeOut { get; set; }
-        [BindProperty] public string DateStarted { get; set; }
-        [BindProperty] public string DateEnded { get; set; }
+        [BindProperty] public String DateStarted { get; set; }
+        [BindProperty] public String DateEnded { get; set; }
         [BindProperty] public string Customer { get; set; }
         [BindProperty] public string Address { get; set; }
         [BindProperty] public int DeliveryReceipt { get; set; }
@@ -33,32 +33,19 @@ namespace Kool_Ref_Inventory_System.Pages
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
                 conn.Open();
-                //string query = "";
-                string serviceQuery = @"
-                    INSERT INTO dbo.ServiceReport (WorkScope, TimeIn, TimeOut, DateStarted, DateEnded, Customer, Address, DeliveryReceipt, InVoice)
-                    VALUES (@workscope, @timeIn, @timeOut, @dateStarted, @dateEnded, @customer, @address, @deliveryReceipt, @inVoice);";
-                string inventoryQuery = @"
-                    INSERT INTO dbo.InandOutSystem (Item, Description, Supplier, Quantity, Price, Location, DeliveryReceipt, InVoice) 
-                    VALUES (@item, @description, @supplier, @quantity, @price, @location, @deliveryReceipt, @inVoice);";
-                string technicianListQuery = @"
-                    INSERT INTO dbo.TechnicianListOrders (Technicians0, Technicians1, Technicians2, Technicians3, Technicians4, Technicians5, Technicians6, Technicians7, Technicians8, Technicians9)
-                    VALUES (@technicians0, @technicians1, @technicians2, @technicians3, @technicians4, @technicians5, @technicians6, @technicians7, @technicians8, @technicians9);";
+                string serviceQuery = "INSERT INTO Koolref.dbo.ServiceReport (WorkScope, TimeIn, TimeOut, DateStarted, DateEnded, Customer, Adddress, DeliveryReceipt, InVoice) VALUES (@workscope, @timeIn, @timeOut, @dateStarted, @dateEnded, @customer, @address, @deliveryReceipt, @inVoice)";
+                string inventoryQuery = "INSERT INTO Koolref.dbo.InandOutSystem (Item, Description, Supplier, Quantity, Price, Location, DeliveryReceipt, InVoice) VALUES (@item, @description, @supplier, @quantity, @price, @location, @deliveryReceipt, @inVoice)";
+                string technicianListQuery = "INSERT INTO Koolref.dbo.TechnicianListOrders (Technicians0, Technicians1, Technicians2, Technicians3, Technicians4, Technicians5, Technicians6, Technicians7, Technicians8, Technicians9) VALUES (@technicians0, @technicians1, @technicians2, @technicians3, @technicians4, @technicians5, @technicians6, @technicians7, @technicians8, @technicians9)";
 
                 using (SqlCommand cmd = new SqlCommand(serviceQuery, conn))
                 {                    
                     cmd.Parameters.AddWithValue("@workScope", WorkScope);
-                    cmd.Parameters.AddWithValue("@customer", Customer);
-                    cmd.Parameters.AddWithValue("@address", Address);
-
-                    // Handling Dates/Times (Checking for empty strings before sending to SQL)
                     cmd.Parameters.AddWithValue("@timeIn", string.IsNullOrEmpty(TimeIn) ? (object)DBNull.Value : TimeIn);
                     cmd.Parameters.AddWithValue("@timeOut", string.IsNullOrEmpty(TimeOut) ? (object)DBNull.Value : TimeOut);
                     cmd.Parameters.AddWithValue("@dateStarted", string.IsNullOrEmpty(DateStarted) ? (object)DBNull.Value : DateStarted);
                     cmd.Parameters.AddWithValue("@dateEnded", string.IsNullOrEmpty(DateEnded) ? (object)DBNull.Value : DateEnded);
-
-                    // --- NEW PARAMETERS END HERE ---
-
-                    // Your existing DeliveryReceipt / InVoice logic
+                    cmd.Parameters.AddWithValue("@customer", Customer);
+                    cmd.Parameters.AddWithValue("@address", Address);
                     if (DeliveryReceipt == 0)
                     {
                         cmd.Parameters.AddWithValue("@deliveryReceipt", DBNull.Value);
@@ -97,9 +84,9 @@ namespace Kool_Ref_Inventory_System.Pages
                 address
                 technician
                  */
-                cmd.ExecuteNonQuery();
+                    cmd.ExecuteNonQuery();
                 }
-
+           
                 using (SqlCommand cmd = new SqlCommand(inventoryQuery, conn))
                 {
                     cmd.Parameters.AddWithValue("@item", Item);
@@ -160,7 +147,7 @@ namespace Kool_Ref_Inventory_System.Pages
                     cmd.ExecuteNonQuery();
                 }
                 */
-            }
+            }  
             return RedirectToPage("/Service");
         }
 
@@ -196,7 +183,7 @@ namespace Kool_Ref_Inventory_System.Pages
                                 DateStarted = Convert.ToDateTime(reader["DateStarted"]).ToString("yyyy-MM-dd"),
                                 DateEnded = Convert.ToDateTime(reader["DateEnded"]).ToString("yyyy-MM-dd"),
                                 Customer = reader["Customer"].ToString(),
-                                Address = reader["Address"].ToString(),
+                                Address = reader["Adddress"].ToString(),
                                 IUD = reader["DeliveryReceipt"] != DBNull.Value
                                       ? Convert.ToInt32(reader["DeliveryReceipt"])
                                       : (reader["InVoice"] != DBNull.Value ? Convert.ToInt32(reader["InVoice"]) : 0),
@@ -215,7 +202,7 @@ namespace Kool_Ref_Inventory_System.Pages
                                 Item = reader["Item"].ToString(),
                                 Description = reader["Description"].ToString(),
                                 Supplier = reader["Supplier"].ToString(),
-                                Date = Convert.ToDateTime(reader["Date"]).ToString("yyyy-MM-dd"),
+                                Date = Convert.ToDateTime(reader["DateStarted"]).ToString("yyyy-MM-dd"), //DAte Needs to be separate area in the form
                                 Quantity = Convert.ToInt32(reader["Quantity"]),
                                 Price = Convert.ToDecimal(reader["Price"]),
                                 Location = reader["Location"].ToString(),

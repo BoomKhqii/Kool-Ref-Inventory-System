@@ -12,7 +12,6 @@ namespace Kool_Ref_Inventory_System.Pages
         {
             _logger = logger;
         }
-
         [BindProperty] public string Products { get; set; }
         [BindProperty] public int Quantities { get; set; }
 
@@ -34,7 +33,7 @@ namespace Kool_Ref_Inventory_System.Pages
                             ELSE 0
                         END
                     ) AS quantity
-                FROM dbo.InandOutSystem
+                FROM Koolref.dbo.InandOutSystem
                 GROUP BY item
                 ORDER BY item;";
 
