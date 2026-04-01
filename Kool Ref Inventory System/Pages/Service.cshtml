@@ -46,6 +46,9 @@
             <label for="supplier">Supplier Name</label><br>
             <input type="text" id="supplier" asp-for="Supplier"><br>
 
+            <label for="datenow">Date</label><br>
+            <input type="date" id="datenow" asp-for="Date"><br>
+
             <label for="quantity">Quantity</label><br>
             <input type="number" id="quantity" asp-for="Quantity"><br>
 
@@ -196,7 +199,7 @@
                         <strong>@item.Item</strong><br />
                         <small>@item.Description</small>
                     </td>
-                    <td>@item.Supplier<br />@item.Date</td>
+                    <td>@item.Supplier<br />@item.DateInv</td>
                     <td>@item.Quantity x @item.Price.ToString("C")</td>
                     <td>@item.Location</td>
                 }

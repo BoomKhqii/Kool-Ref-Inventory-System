@@ -22,6 +22,7 @@ namespace Kool_Ref_Inventory_System.Pages
         [BindProperty] public int Quantity { get; set; }
         [BindProperty] public decimal Price { get; set; }
         [BindProperty] public string Location { get; set; }
+        [BindProperty] public string Date { get; set; }
 
         public List<Items> Inventory { get; set; }
         public List<Service> ServiceReport { get; set; }
@@ -34,9 +35,49 @@ namespace Kool_Ref_Inventory_System.Pages
             {
                 conn.Open();
                 string serviceQuery = "INSERT INTO Koolref.dbo.ServiceReport (WorkScope, TimeIn, TimeOut, DateStarted, DateEnded, Customer, Adddress, DeliveryReceipt, InVoice) VALUES (@workscope, @timeIn, @timeOut, @dateStarted, @dateEnded, @customer, @address, @deliveryReceipt, @inVoice)";
-                string inventoryQuery = "INSERT INTO Koolref.dbo.InandOutSystem (Item, Description, Supplier, Quantity, Price, Location, DeliveryReceipt, InVoice) VALUES (@item, @description, @supplier, @quantity, @price, @location, @deliveryReceipt, @inVoice)";
+                string inventoryQuery = "INSERT INTO Koolref.dbo.InandOutSystem (Item, Description, Supplier, Date, Quantity, Price, Location, DeliveryReceipt, InVoice) VALUES (@item, @description, @supplier, @date, @quantity, @price, @location, @deliveryReceipt, @inVoice)";
                 string technicianListQuery = "INSERT INTO Koolref.dbo.TechnicianListOrders (Technicians0, Technicians1, Technicians2, Technicians3, Technicians4, Technicians5, Technicians6, Technicians7, Technicians8, Technicians9) VALUES (@technicians0, @technicians1, @technicians2, @technicians3, @technicians4, @technicians5, @technicians6, @technicians7, @technicians8, @technicians9)";
 
+                // Technician Query
+                using (SqlCommand cmd = new SqlCommand(technicianListQuery, conn))
+                {
+                    // Loop 10 times to fill @technicians0 through @technicians9
+                    for (int i = 0; i < 10; i++)
+                    {
+                        // Check if the list has an item at this index
+                        object value = (InputTechnician != null && InputTechnician.Count > i)
+                            ? (object)InputTechnician[i]
+                            : DBNull.Value;
+
+                        cmd.Parameters.AddWithValue($"@technicians{i}", value);
+                    }
+
+                    cmd.ExecuteNonQuery();
+                }
+                /*
+                {
+                    cmd.Parameters.AddWithValue("@item", Item);
+                    cmd.Parameters.AddWithValue("@description", Description);
+                    cmd.Parameters.AddWithValue("@supplier", Supplier);
+                    cmd.Parameters.AddWithValue("@quantity", Quantity);
+                    cmd.Parameters.AddWithValue("@price", Price);
+                    cmd.Parameters.AddWithValue("@location", Location);
+                    if (DeliveryReceipt == 0)
+                    {
+
+                        cmd.Parameters.AddWithValue("@deliveryReceipt", DBNull.Value);
+                        cmd.Parameters.AddWithValue("@inVoice", InVoice);
+                    }
+                    else
+                    {
+                        cmd.Parameters.AddWithValue("@inVoice", DBNull.Value);
+                        cmd.Parameters.AddWithValue("@deliveryReceipt", DeliveryReceipt);
+                    }
+                    cmd.ExecuteNonQuery();
+                }
+                */
+
+                // Service Report Query
                 using (SqlCommand cmd = new SqlCommand(serviceQuery, conn))
                 {                    
                     cmd.Parameters.AddWithValue("@workScope", WorkScope);
@@ -87,11 +128,13 @@ namespace Kool_Ref_Inventory_System.Pages
                     cmd.ExecuteNonQuery();
                 }
            
+                // Inventory Query
                 using (SqlCommand cmd = new SqlCommand(inventoryQuery, conn))
                 {
                     cmd.Parameters.AddWithValue("@item", Item);
                     cmd.Parameters.AddWithValue("@description", Description);
                     cmd.Parameters.AddWithValue("@supplier", Supplier);
+                    cmd.Parameters.AddWithValue("@date", string.IsNullOrEmpty(Date) ? (object)DBNull.Value : Date);
                     cmd.Parameters.AddWithValue("@quantity", Quantity);
                     cmd.Parameters.AddWithValue("@price", Price);
                     cmd.Parameters.AddWithValue("@location", Location);
@@ -109,44 +152,6 @@ namespace Kool_Ref_Inventory_System.Pages
                     cmd.ExecuteNonQuery();
 
                 }
-
-                using (SqlCommand cmd = new SqlCommand(technicianListQuery, conn))
-                {
-                    // Loop 10 times to fill @technicians0 through @technicians9
-                    for (int i = 0; i < 10; i++)
-                    {
-                        // Check if the list has an item at this index
-                        object value = (InputTechnician != null && InputTechnician.Count > i)
-                            ? (object)InputTechnician[i]
-                            : DBNull.Value;
-
-                        cmd.Parameters.AddWithValue($"@technicians{i}", value);
-                    }
-
-                    cmd.ExecuteNonQuery();
-                }
-                /*
-                {
-                    cmd.Parameters.AddWithValue("@item", Item);
-                    cmd.Parameters.AddWithValue("@description", Description);
-                    cmd.Parameters.AddWithValue("@supplier", Supplier);
-                    cmd.Parameters.AddWithValue("@quantity", Quantity);
-                    cmd.Parameters.AddWithValue("@price", Price);
-                    cmd.Parameters.AddWithValue("@location", Location);
-                    if (DeliveryReceipt == 0)
-                    {
-
-                        cmd.Parameters.AddWithValue("@deliveryReceipt", DBNull.Value);
-                        cmd.Parameters.AddWithValue("@inVoice", InVoice);
-                    }
-                    else
-                    {
-                        cmd.Parameters.AddWithValue("@inVoice", DBNull.Value);
-                        cmd.Parameters.AddWithValue("@deliveryReceipt", DeliveryReceipt);
-                    }
-                    cmd.ExecuteNonQuery();
-                }
-                */
             }  
             return RedirectToPage("/Service");
         }
@@ -175,6 +180,7 @@ namespace Kool_Ref_Inventory_System.Pages
                         Inventory = new List<Items>();
                         while (reader.Read())
                         {
+                            // Service
                             ServiceReport.Add(new Service
                             {
                                 WorkScope = reader["WorkScope"].ToString(),
@@ -189,6 +195,7 @@ namespace Kool_Ref_Inventory_System.Pages
                                       : (reader["InVoice"] != DBNull.Value ? Convert.ToInt32(reader["InVoice"]) : 0),
                             });
 
+                            // Technicians
                             // Loop from 0 to 9 to handle Technician0 through Technician9
                             for (int i = 0; i <= 9; i++)
                             {
@@ -197,12 +204,14 @@ namespace Kool_Ref_Inventory_System.Pages
                                     Technicians.Add(reader[columnName].ToString());
                             }
 
+                            // Inventory
                             Inventory.Add(new Items
                             {
                                 Item = reader["Item"].ToString(),
                                 Description = reader["Description"].ToString(),
                                 Supplier = reader["Supplier"].ToString(),
-                                Date = Convert.ToDateTime(reader["DateStarted"]).ToString("yyyy-MM-dd"), //DAte Needs to be separate area in the form
+                                //DateInv = Convert.ToDateTime(reader["Date"]).ToString("yyyy-MM-dd"), //DAte Needs to be separate area in the form
+                                DateInv = reader["Date"] == DBNull.Value ? null : Convert.ToDateTime(reader["Date"]).ToString("yyyy-MM-dd"),
                                 Quantity = Convert.ToInt32(reader["Quantity"]),
                                 Price = Convert.ToDecimal(reader["Price"]),
                                 Location = reader["Location"].ToString(),
