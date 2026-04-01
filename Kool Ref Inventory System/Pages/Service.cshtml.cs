@@ -54,28 +54,6 @@ namespace Kool_Ref_Inventory_System.Pages
 
                     cmd.ExecuteNonQuery();
                 }
-                /*
-                {
-                    cmd.Parameters.AddWithValue("@item", Item);
-                    cmd.Parameters.AddWithValue("@description", Description);
-                    cmd.Parameters.AddWithValue("@supplier", Supplier);
-                    cmd.Parameters.AddWithValue("@quantity", Quantity);
-                    cmd.Parameters.AddWithValue("@price", Price);
-                    cmd.Parameters.AddWithValue("@location", Location);
-                    if (DeliveryReceipt == 0)
-                    {
-
-                        cmd.Parameters.AddWithValue("@deliveryReceipt", DBNull.Value);
-                        cmd.Parameters.AddWithValue("@inVoice", InVoice);
-                    }
-                    else
-                    {
-                        cmd.Parameters.AddWithValue("@inVoice", DBNull.Value);
-                        cmd.Parameters.AddWithValue("@deliveryReceipt", DeliveryReceipt);
-                    }
-                    cmd.ExecuteNonQuery();
-                }
-                */
 
                 // Service Report Query
                 using (SqlCommand cmd = new SqlCommand(serviceQuery, conn))
@@ -97,34 +75,6 @@ namespace Kool_Ref_Inventory_System.Pages
                         cmd.Parameters.AddWithValue("@inVoice", DBNull.Value);
                         cmd.Parameters.AddWithValue("@deliveryReceipt", DeliveryReceipt);
                     }
-                /*
-                cmd.Parameters.AddWithValue("@item", Item);
-                cmd.Parameters.AddWithValue("@description", Description);
-                cmd.Parameters.AddWithValue("@supplier", Supplier);
-                cmd.Parameters.AddWithValue("@quantity", Quantity);
-                cmd.Parameters.AddWithValue("@price", Price);
-                cmd.Parameters.AddWithValue("@location", Location);
-                if (DeliveryReceipt == 0)
-                {
-
-                    cmd.Parameters.AddWithValue("@deliveryReceipt", DBNull.Value);
-                    cmd.Parameters.AddWithValue("@inVoice", InVoice);
-                }
-                else
-                {
-                    cmd.Parameters.AddWithValue("@inVoice", DBNull.Value);
-                    cmd.Parameters.AddWithValue("@deliveryReceipt", DeliveryReceipt);
-                }
-
-                 workscope
-                timein
-                timeout
-                date start
-                end
-                customer
-                address
-                technician
-                 */
                     cmd.ExecuteNonQuery();
                 }
            

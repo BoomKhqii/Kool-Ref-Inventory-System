@@ -67,9 +67,39 @@
 </dialog>
 <button id="ivAdd">Add In Voice</button>
 <dialog id="ivWindow">
-    <h2>In Voice <button id="ivClose">Close</button></h2>
+    <h2>InVoice <button id="drClose">Close</button></h2>
     <table class="inventory-table">
         <form method="post" asp-page="Service">
+            <label for="workscope">Work Scope</label><br>
+            <input type="text" id="workscope" asp-for="WorkScope"><br>
+
+            <label for="timein">Time In</label><br>
+            <input type="time" id="timein" asp-for="TimeIn"><br>
+
+            <label for="timeout">Time Out</label><br>
+            <input type="time" id="timeout" asp-for="TimeOut"><br>
+
+            <label for="datestarted">Date Started</label><br>
+            <input type="date" id="datestarted" asp-for="DateStarted"><br>
+
+            <label for="dateended">Date Ended</label><br>
+            <input type="date" id="dateended" asp-for="DateEnded"><br>
+
+            <label for="customer">Customer Name</label><br>
+            <input type="text" id="customer" asp-for="Customer"><br>
+
+            <label for="address">Address</label><br>
+            <input type="text" id="address" asp-for="Address"><br>
+
+            <div id="technician-list">
+                <label>Technicians</label>
+                <div class="input-group mb-2">
+                    <input type="text" name="InputTechnician" class="form-control" asp-for="InputTechnician" placeholder="Enter name" />
+                    <button type="button" class="btn btn-danger" onclick="removeRow(this)">Remove</button>
+                </div>
+            </div>
+
+            <button type="button" class="btn btn-success" onclick="addRow()">+ Add Technician</button><br>
 
             <label for="item">Item Name</label><br>
             <input type="text" id="item" asp-for="Item"><br>
@@ -80,6 +110,9 @@
             <label for="supplier">Supplier Name</label><br>
             <input type="text" id="supplier" asp-for="Supplier"><br>
 
+            <label for="datenow">Date</label><br>
+            <input type="date" id="datenow" asp-for="Date"><br>
+
             <label for="quantity">Quantity</label><br>
             <input type="number" id="quantity" asp-for="Quantity"><br>
 
@@ -89,10 +122,10 @@
             <label for="location">Location</label><br>
             <input type="text" id="location" asp-for="Location"><br>
 
-            <label for="iv">In Voice</label><br>
+            <label for="iv">InVoice</label><br>
             <input type="number" id="iv" asp-for="InVoice"><br>
 
-        <button type="submit">Add Report</button>
+            <button type="submit">Add Report</button>
         </form>
     </table>
 </dialog>
