@@ -1,4 +1,5 @@
 ﻿@page
+@using System.Globalization;
 @model InventoryModel
 <h1>@ViewData["Title"]</h1>
 
@@ -35,7 +36,7 @@ Add inventory
                 <td>@item.Supplier</td>
                 <td>@item.DateInv</td>
                 <td>@item.Quantity</td>
-                <td>@item.Price.ToString("C")</td>
+                <td>@item.Price.ToString("C", CultureInfo.GetCultureInfo("en-PH"))</td>
                 <td>@item.Location</td>
                 <td>@item.IUD</td>
             </tr>

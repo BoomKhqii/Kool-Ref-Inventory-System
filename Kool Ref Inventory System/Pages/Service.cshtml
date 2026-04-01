@@ -67,7 +67,7 @@
 </dialog>
 <button id="ivAdd">Add In Voice</button>
 <dialog id="ivWindow">
-    <h2>InVoice <button id="drClose">Close</button></h2>
+    <h2>InVoice <button id="ivClose">Close</button></h2>
     <table class="inventory-table">
         <form method="post" asp-page="Service">
             <label for="workscope">Work Scope</label><br>
@@ -91,15 +91,15 @@
             <label for="address">Address</label><br>
             <input type="text" id="address" asp-for="Address"><br>
 
-            <div id="technician-list">
+            <div id="technician-list2">
                 <label>Technicians</label>
-                <div class="input-group mb-2">
+                <div class="input-group mb-22">
                     <input type="text" name="InputTechnician" class="form-control" asp-for="InputTechnician" placeholder="Enter name" />
                     <button type="button" class="btn btn-danger" onclick="removeRow(this)">Remove</button>
                 </div>
             </div>
 
-            <button type="button" class="btn btn-success" onclick="addRow()">+ Add Technician</button><br>
+            <button type="button" class="btn btn-success" onclick="addRow2()">+ Add Technician</button><br>
 
             <label for="item">Item Name</label><br>
             <input type="text" id="item" asp-for="Item"><br>
@@ -156,7 +156,23 @@
 
         // Add the input and the remove button
         row.innerHTML = `
-            <input type="text" name="InputTechnician" class="form-control" placeholder="Enter name" />
+            <input type="text" name="InputTechnician" class="form-control" asp-for="InputTechnician" placeholder="Enter name"/>
+            <button type="button" class="btn btn-danger" onclick="removeRow(this)">Remove</button>
+        `;
+
+        container.appendChild(row);
+    }
+
+    function addRow2() {
+        const container = document.getElementById('technician-list2');
+
+        // Create a new wrapper div
+        const row = document.createElement('div');
+        row.className = 'input-group mb-22';
+
+        // Add the input and the remove button
+        row.innerHTML = `
+            <input type="text" name="InputTechnician" class="form-control" asp-for="InputTechnician" placeholder="Enter name"/>
             <button type="button" class="btn btn-danger" onclick="removeRow(this)">Remove</button>
         `;
 
@@ -199,13 +215,13 @@
         {
             <tr>
                 <td>
-                    @if (i == 0)
+                    @if (i < Model.Technicians.Count)
                     {
-                        foreach (var name in Model.Technicians)
-                        {
-                            <div>@name</div>
-                        }
+                        <div>@Model.Technicians[i]</div>
+                        <input type="hidden" name="Technicians[@i]" value="@Model.Technicians[i]"/>
                     }
+
+
                 </td>
 
                 @if (i < Model.ServiceReport.Count)

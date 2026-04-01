@@ -146,13 +146,24 @@ namespace Kool_Ref_Inventory_System.Pages
                             });
 
                             // Technicians
-                            // Loop from 0 to 9 to handle Technician0 through Technician9
+                            // Loop through the 10 possible columns in your database row
+                            for (int i = 0; i <= 9; i++)
+                            {
+                                string columnName = "Technicians" + i;
+                                if (reader[columnName] != DBNull.Value)
+                                {
+                                    string value = reader[columnName].ToString();
+                                    if (!string.IsNullOrWhiteSpace(value))
+                                        Technicians.Add(value);
+                                }
+                            }
+                            /*// Loop from 0 to 9 to handle Technician0 through Technician9
                             for (int i = 0; i <= 9; i++)
                             {
                                 string columnName = "Technicians" + i;
                                 if (reader[columnName] != DBNull.Value)
                                     Technicians.Add(reader[columnName].ToString());
-                            }
+                            }*/
 
                             // Inventory
                             Inventory.Add(new Items
