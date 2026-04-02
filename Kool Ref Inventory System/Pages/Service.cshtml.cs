@@ -1,12 +1,14 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Data.SqlClient;
+using System.Runtime.CompilerServices;
 
 namespace Kool_Ref_Inventory_System.Pages
 {
     public class ServiceModel : PageModel
     {
         [BindProperty] public List<string> InputTechnician { get; set; }
+        [BindProperty] public string[] Technician { get; set; }
         [BindProperty] public string WorkScope { get; set; }
         [BindProperty] public string TimeIn { get; set; }
         [BindProperty] public string TimeOut { get; set; }
@@ -41,6 +43,18 @@ namespace Kool_Ref_Inventory_System.Pages
                 // Technician Query
                 using (SqlCommand cmd = new SqlCommand(technicianListQuery, conn))
                 {
+                    for (int i = 0; i < 10; i++)
+                    {
+                        if (i < Technician.Length)
+                            cmd.Parameters.AddWithValue($"@technicians{i}", (object)Technician[i] ?? DBNull.Value);
+                        else
+                            cmd.Parameters.AddWithValue($"@technicians{i}", DBNull.Value);
+                    }
+                    cmd.ExecuteNonQuery();
+                }
+                /*
+                using (SqlCommand cmd = new SqlCommand(technicianListQuery, conn))
+                {
                     // Loop 10 times to fill @technicians0 through @technicians9
                     for (int i = 0; i < 10; i++)
                     {
@@ -54,10 +68,11 @@ namespace Kool_Ref_Inventory_System.Pages
 
                     cmd.ExecuteNonQuery();
                 }
+                */
 
                 // Service Report Query
                 using (SqlCommand cmd = new SqlCommand(serviceQuery, conn))
-                {                    
+                {
                     cmd.Parameters.AddWithValue("@workScope", WorkScope);
                     cmd.Parameters.AddWithValue("@timeIn", string.IsNullOrEmpty(TimeIn) ? (object)DBNull.Value : TimeIn);
                     cmd.Parameters.AddWithValue("@timeOut", string.IsNullOrEmpty(TimeOut) ? (object)DBNull.Value : TimeOut);

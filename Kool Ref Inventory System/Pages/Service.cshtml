@@ -89,17 +89,35 @@
             <input type="text" id="customer" asp-for="Customer"><br>
 
             <label for="address">Address</label><br>
-            <input type="text" id="address" asp-for="Address"><br>
+            <input type="text" id="address" asp-for="Address"><br><br>
 
+            <!--
             <div id="technician-list2">
                 <label>Technicians</label>
                 <div class="input-group mb-22">
-                    <input type="text" name="InputTechnician" class="form-control" asp-for="InputTechnician" placeholder="Enter name" />
+                    <input type="text" name="InputTechnician[0]" class="form-control" placeholder="Enter name" />
                     <button type="button" class="btn btn-danger" onclick="removeRow(this)">Remove</button>
                 </div>
             </div>
-
             <button type="button" class="btn btn-success" onclick="addRow2()">+ Add Technician</button><br>
+            -->
+
+            <button type="button" id="tech-but-temp">Technician List</button>
+            <dialog id="tech-diag-temp">
+                <button type="button" id="tech-close-temp">Close</button><br>
+                <label>Technicians</label><br>
+                <input type="text" asp-for="Technician[0]" placeholder="Enter Technician 1"><br>
+                <input type="text" asp-for="Technician[1]" placeholder="Enter Technician 2"><br>
+                <input type="text" asp-for="Technician[2]" placeholder="Enter Technician 3"><br>
+                <input type="text" asp-for="Technician[3]" placeholder="Enter Technician 4"><br>
+                <input type="text" asp-for="Technician[4]" placeholder="Enter Technician 5"><br>
+                <input type="text" asp-for="Technician[5]" placeholder="Enter Technician 6"><br>
+                <input type="text" asp-for="Technician[6]" placeholder="Enter Technician 7"><br>
+                <input type="text" asp-for="Technician[7]" placeholder="Enter Technician 8"><br>
+                <input type="text" asp-for="Technician[8]" placeholder="Enter Technician 9"><br>
+                <input type="text" asp-for="Technician[9]" placeholder="Enter Technician 10"><br>
+            </dialog><br>
+
 
             <label for="item">Item Name</label><br>
             <input type="text" id="item" asp-for="Item"><br>
@@ -133,6 +151,8 @@
     const drAdd = document.getElementById("drAdd"), drClose = document.getElementById("drClose"), drWindow = document.getElementById("drWindow");
     const ivAdd = document.getElementById("ivAdd"), ivClose = document.getElementById("ivClose"), ivWindow = document.getElementById("ivWindow");
 
+
+    // Delivery Receipt Add and close
     drAdd.addEventListener("click", () => {
         drWindow.showModal();
     });
@@ -140,12 +160,23 @@
         drWindow.close();
         });
 
+    // Invoice Add and Close
     ivAdd.addEventListener("click", () => {
         ivWindow.showModal();
     });
     ivClose.addEventListener("click", () => {
         ivWindow.close();
         });
+
+    // temp technician dialog
+    const techtemp_button = document.getElementById("tech-but-temp"), techtemp_close = document.getElementById("tech-close-temp"), techtemp_diag = document.getElementById("tech-diag-temp");
+    techtemp_button.addEventListener("click", () => {
+        techtemp_diag.showModal();
+    });
+    techtemp_close.addEventListener("click", () => {
+        techtemp_diag.close();
+        });
+
 
     function addRow() {
         const container = document.getElementById('technician-list');
@@ -163,16 +194,18 @@
         container.appendChild(row);
     }
 
-    function addRow2() {
+        function addRow2() {
         const container = document.getElementById('technician-list2');
 
-        // Create a new wrapper div
+        // Count existing rows to get the correct next index
+        const index = container.getElementsByClassName('input-group').length;
+
         const row = document.createElement('div');
         row.className = 'input-group mb-22';
 
-        // Add the input and the remove button
+        // Set name to "InputTechnician[index]"
         row.innerHTML = `
-            <input type="text" name="InputTechnician" class="form-control" asp-for="InputTechnician" placeholder="Enter name"/>
+            <input type="text" name="InputTechnician[${index}]" class="form-control" placeholder="Enter name"/>
             <button type="button" class="btn btn-danger" onclick="removeRow(this)">Remove</button>
         `;
 
