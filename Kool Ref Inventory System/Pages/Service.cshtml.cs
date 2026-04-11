@@ -3,13 +3,13 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Data.SqlClient;
 using System.Runtime.CompilerServices;
 
+
 namespace Kool_Ref_Inventory_System.Pages
 {
     public class ServiceModel : PageModel
     {
-        [BindProperty] public List<string> InputTechnician { get; set; }
-        [BindProperty] public string[] Technician { get; set; }
-        [BindProperty] public string WorkScope { get; set; }
+        [BindProperty] public List<string> Technician { get; set; }
+         [BindProperty] public string WorkScope { get; set; }
         [BindProperty] public string TimeIn { get; set; }
         [BindProperty] public string TimeOut { get; set; }
         [BindProperty] public String DateStarted { get; set; }
@@ -25,10 +25,13 @@ namespace Kool_Ref_Inventory_System.Pages
         [BindProperty] public decimal Price { get; set; }
         [BindProperty] public string Location { get; set; }
         [BindProperty] public string Date { get; set; }
-
-        public List<Items> Inventory { get; set; }
-        public List<Service> ServiceReport { get; set; }
-        public List<string> Technicians { get; set; } = new List<string>();
+        public class CombinedViewModel
+        {
+            public Service ServiceReport { get; set; }
+            public List<string> Technicians { get; set; }
+            public Items Inventory { get; set; }
+        }
+        public List<CombinedViewModel> Records { get; set; }
         string connectionString = "Server=localhost\\SQLEXPRESS;Database=Koolref;Trusted_Connection=True;TrustServerCertificate=True;";
 
         public IActionResult OnPost()
@@ -45,7 +48,7 @@ namespace Kool_Ref_Inventory_System.Pages
                 {
                     for (int i = 0; i < 10; i++)
                     {
-                        if (i < Technician.Length)
+                        if (i < Technician.Count)
                             cmd.Parameters.AddWithValue($"@technicians{i}", (object)Technician[i] ?? DBNull.Value);
                         else
                             cmd.Parameters.AddWithValue($"@technicians{i}", DBNull.Value);
@@ -140,12 +143,86 @@ namespace Kool_Ref_Inventory_System.Pages
                 {
                     using (SqlDataReader reader = cmd.ExecuteReader())
                     {
+                        Records = new List<CombinedViewModel>();
+
+                        while (reader.Read())
+                        {
+                            var technicians = new List<string>();
+
+                            for (int i = 0; i <= 9; i++)
+                            {
+                                string columnName = "Technicians" + i;
+                                if (reader[columnName] != DBNull.Value)
+                                {
+                                    string value = reader[columnName].ToString();
+                                    if (!string.IsNullOrWhiteSpace(value))
+                                        technicians.Add(value);
+                                }
+                            }
+
+                            Records.Add(new CombinedViewModel
+                            {
+                                ServiceReport = new Service
+                                {
+                                    WorkScope = reader["WorkScope"]?.ToString() ?? "",
+                                    TimeIn = reader["TimeIn"]?.ToString() ?? "",
+                                    TimeOut = reader["TimeOut"]?.ToString() ?? "",
+                                    DateStarted = reader["DateStarted"] != DBNull.Value
+                                        ? Convert.ToDateTime(reader["DateStarted"]).ToString("yyyy-MM-dd")
+                                        : "",
+                                    DateEnded = reader["DateEnded"] != DBNull.Value
+                                        ? Convert.ToDateTime(reader["DateEnded"]).ToString("yyyy-MM-dd")
+                                        : "",
+                                    Customer = reader["Customer"]?.ToString() ?? "",
+                                    Address = reader["Adddress"]?.ToString() ?? "",
+                                    IUD = (reader["DeliveryReceipt"] as int?) ?? (reader["InVoice"] as int?) ?? 0
+                                },
+
+                                Technicians = technicians,
+
+                                Inventory = new Items
+                                {
+                                    Item = reader["Item"].ToString(),
+                                    Description = reader["Description"].ToString(),
+                                    Supplier = reader["Supplier"].ToString(),
+                                    DateInv = reader["Date"] == DBNull.Value ? null :
+                                        Convert.ToDateTime(reader["Date"]).ToString("yyyy-MM-dd"),
+                                    Quantity = Convert.ToInt32(reader["Quantity"]),
+                                    Price = Convert.ToDecimal(reader["Price"]),
+                                    Location = reader["Location"].ToString(),
+                                    IUD = (reader["DeliveryReceipt"] as int?) ?? (reader["InVoice"] as int?) ?? 0
+                                }
+                            });
+                        }
+                        /*
                         ServiceReport = new List<Service>();
                         Technicians = new List<string>();
                         Inventory = new List<Items>();
                         while (reader.Read())
                         {
                             // Service
+                            ServiceReport.Add(new Service
+                            {
+                                WorkScope = reader["WorkScope"]?.ToString() ?? "",
+                                TimeIn = reader["TimeIn"]?.ToString() ?? "",
+                                TimeOut = reader["TimeOut"]?.ToString() ?? "",
+
+                                // Safety check for Dates
+                                DateStarted = reader["DateStarted"] != DBNull.Value
+                                    ? Convert.ToDateTime(reader["DateStarted"]).ToString("yyyy-MM-dd")
+                                    : string.Empty,
+                                DateEnded = reader["DateEnded"] != DBNull.Value
+                                    ? Convert.ToDateTime(reader["DateEnded"]).ToString("yyyy-MM-dd")
+                                    : string.Empty,
+                                Customer = reader["Customer"]?.ToString() ?? "",
+
+                                // Fixed the triple 'd' in Address and added null check
+                                Address = reader["Adddress"]?.ToString() ?? "",
+
+                                // Using a cleaner pattern for the IUD logic
+                                IUD = (reader["DeliveryReceipt"] as int?) ?? (reader["InVoice"] as int?) ?? 0
+                            });
+                            /*
                             ServiceReport.Add(new Service
                             {
                                 WorkScope = reader["WorkScope"].ToString(),
@@ -159,7 +236,8 @@ namespace Kool_Ref_Inventory_System.Pages
                                       ? Convert.ToInt32(reader["DeliveryReceipt"])
                                       : (reader["InVoice"] != DBNull.Value ? Convert.ToInt32(reader["InVoice"]) : 0),
                             });
-
+                            */
+                        /*
                             // Technicians
                             // Loop through the 10 possible columns in your database row
                             for (int i = 0; i <= 9; i++)
@@ -172,15 +250,31 @@ namespace Kool_Ref_Inventory_System.Pages
                                         Technicians.Add(value);
                                 }
                             }
-                            /*// Loop from 0 to 9 to handle Technician0 through Technician9
+                            /*
+                        / Loop from 0 to 9 to handle Technician0 through Technician9
                             for (int i = 0; i <= 9; i++)
                             {
                                 string columnName = "Technicians" + i;
                                 if (reader[columnName] != DBNull.Value)
                                     Technicians.Add(reader[columnName].ToString());
                             }*/
-
+                        /*
                             // Inventory
+                            Inventory.Add(new Items
+                            {
+                                Item = reader["Item"].ToString(),
+                                Description = reader["Description"].ToString(),
+                                Supplier = reader["Supplier"].ToString(),
+                                //DateInv = Convert.ToDateTime(reader["Date"]).ToString("yyyy-MM-dd"),
+                                DateInv = reader["Date"] == DBNull.Value ? null : Convert.ToDateTime(reader["Date"]).ToString("yyyy-MM-dd"),
+                                Quantity = Convert.ToInt32(reader["Quantity"]),
+                                Price = Convert.ToDecimal(reader["Price"]),
+                                Location = reader["Location"].ToString(),
+                                IUD = reader["DeliveryReceipt"] != DBNull.Value
+                                  ? Convert.ToInt32(reader["DeliveryReceipt"])
+                                  : (reader["InVoice"] != DBNull.Value ? Convert.ToInt32(reader["InVoice"]) : 0)
+                            });
+                            /*
                             Inventory.Add(new Items
                             {
                                 Item = reader["Item"].ToString(),
@@ -191,10 +285,13 @@ namespace Kool_Ref_Inventory_System.Pages
                                 Quantity = Convert.ToInt32(reader["Quantity"]),
                                 Price = Convert.ToDecimal(reader["Price"]),
                                 Location = reader["Location"].ToString(),
-                                DeliveryReceipt = reader["DeliveryReceipt"] == DBNull.Value ? 0 : Convert.ToInt32(reader["DeliveryReceipt"]),
-                                InVoice = reader["InVoice"] == DBNull.Value ? 0 : Convert.ToInt32(reader["InVoice"])
+                                //DeliveryReceipt = reader["DeliveryReceipt"] == DBNull.Value ? 0 : Convert.ToInt32(reader["DeliveryReceipt"]),
+                                //InVoice = reader["InVoice"] == DBNull.Value ? 0 : Convert.ToInt32(reader["InVoice"])
+                                IUD = reader["DeliveryReceipt"] != DBNull.Value
+                                  ? Convert.ToInt32(reader["DeliveryReceipt"])
+                                  : (reader["InVoice"] != DBNull.Value ? Convert.ToInt32(reader["InVoice"]) : 0)
                             });
-                        }
+                            */
                     }
                 }
             }

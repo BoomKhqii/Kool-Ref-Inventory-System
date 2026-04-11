@@ -1,5 +1,7 @@
 ﻿@page
 @model Kool_Ref_Inventory_System.Pages.ServiceModel
+@using System.Globalization;
+
 
 <button id="drAdd">Add Delivery Receipt</button>
 <dialog id="drWindow">
@@ -30,7 +32,7 @@
             <div id="technician-list">
                 <label>Technicians</label>
                 <div class="input-group mb-2">
-                    <input type="text" name="InputTechnician" class="form-control" asp-for="InputTechnician" placeholder="Enter name"/>
+                    <input type="text" name="Technician" class="form-control" asp-for="Technician" placeholder="Enter name"/>
                     <button type="button" class="btn btn-danger" onclick="removeRow(this)">Remove</button>
                 </div>
             </div>
@@ -187,7 +189,7 @@
 
         // Add the input and the remove button
         row.innerHTML = `
-            <input type="text" name="InputTechnician" class="form-control" asp-for="InputTechnician" placeholder="Enter name"/>
+            <input type="text" name="Technician" class="form-control" asp-for="Technician" placeholder="Enter name"/>
             <button type="button" class="btn btn-danger" onclick="removeRow(this)">Remove</button>
         `;
 
@@ -205,7 +207,7 @@
 
         // Set name to "InputTechnician[index]"
         row.innerHTML = `
-            <input type="text" name="InputTechnician[${index}]" class="form-control" placeholder="Enter name"/>
+            <input type="text" name="Technician[${index}]" class="form-control" placeholder="Enter name"/>
             <button type="button" class="btn btn-danger" onclick="removeRow(this)">Remove</button>
         `;
 
@@ -238,57 +240,34 @@
         </tr>
     </thead>
     <tbody>
-
-        @{
-            // Find which list is longer so we don't miss any data
-            int rowCount = Math.Max(Model.ServiceReport.Count, Model.Inventory.Count);
-        }
-
-        @for (int i = 0; i < rowCount; i++)
+        @foreach (var row in Model.Records)
         {
             <tr>
                 <td>
-                    @if (i < Model.Technicians.Count)
+                    @foreach (var tech in row.Technicians)
                     {
-                        <div>@Model.Technicians[i]</div>
-                        <input type="hidden" name="Technicians[@i]" value="@Model.Technicians[i]"/>
+                        <div>@tech</div>
                     }
-
-
                 </td>
 
-                @if (i < Model.ServiceReport.Count)
-                {
-                    var service = Model.ServiceReport[i];
-                    <td>@service.WorkScope</td>
-                    <td>@service.TimeIn - @service.TimeOut</td>
-                    <td>@service.DateStarted - @service.DateEnded</td>
-                    <td>
-                        <strong>@service.Customer</strong><br />
-                        <small>@service.Address</small>
-                    </td>
-                    <td>@service.IUD</td>
-                }
-                else
-                {
-                    <td colspan="5"></td> @* Fills the 5 service columns if empty *@
-                }
+                <td>@row.ServiceReport.WorkScope</td>
+                <td>@row.ServiceReport.TimeIn - @row.ServiceReport.TimeOut</td>
+                <td>@row.ServiceReport.DateStarted - @row.ServiceReport.DateEnded</td>
 
-                @if (i < Model.Inventory.Count)
-                {
-                    var item = Model.Inventory[i];
-                    <td>
-                        <strong>@item.Item</strong><br />
-                        <small>@item.Description</small>
-                    </td>
-                    <td>@item.Supplier<br />@item.DateInv</td>
-                    <td>@item.Quantity x @item.Price.ToString("C")</td>
-                    <td>@item.Location</td>
-                }
-                else
-                {
-                    <td colspan="4"></td> @* Fills the 4 inventory columns if empty *@
-                }
+                <td>
+                    <strong>@row.ServiceReport.Customer</strong><br />
+                    <small>@row.ServiceReport.Address</small>
+                </td>
+
+                <td>@row.ServiceReport.IUD</td>
+                <td>
+                    <strong>@row.Inventory.Item</strong><br />
+                    <small>@row.Inventory.Description</small>
+                </td>
+
+                <td>@row.Inventory.Supplier<br />@row.Inventory.DateInv</td>
+                <td>@row.Inventory.Quantity x @row.Inventory.Price.ToString("C")</td>
+                <td>@row.Inventory.Location</td>
             </tr>
         }
     </tbody>
