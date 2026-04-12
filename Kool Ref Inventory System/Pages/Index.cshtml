@@ -5,6 +5,42 @@
 }
 
 <div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+
+    <table class="inventory-quantity-table">
+        <thead>
+            <tr>
+                <th>Item Name</th>
+                <th>Stocks</th>
+            </tr>
+        </thead>
+        <tbody>
+                @foreach (var display in Model.Index)
+                {
+                    <tr>
+                    <td>@display.Products</td>
+                    <td>@display.Quantities</td>
+                </tr>
+                }
+        </tbody>
+    </table>
+    <h1 class="display-4">Stock numbers</h1>
+    <p>Table: location???, amount of items. Color coded: Red urgent matter, orange slightly urgent | there's a view all type shi where it includes even the green coded | table is urgent to least urgent </p>
+    <p>range:
+        low: 0-5
+        medium: 5-15
+        High: 15
+
+        Error of misinputs
+        CSS
+        Edit -> takes awhile
+
+        red 
+        #8a352e
+        green
+        #04AA6D
+        blue
+        #a8e3e8
+        dark blue
+        #304c7a
+    </p>
 </div>

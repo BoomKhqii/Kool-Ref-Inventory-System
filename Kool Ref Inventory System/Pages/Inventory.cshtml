@@ -1,0 +1,46 @@
+﻿@page
+@using System.Globalization;
+@model InventoryModel
+<h1>@ViewData["Title"]</h1>
+
+<!--
+Todo: 
+Add inventory
+    -Filter: DR or IV
+    -Search
+    - Service Report
+    - User 
+    - Table: include date
+-->
+
+<table class="inventory-table">
+    <thead>
+        <tr>
+            <th>Item</th>
+            <th>Description</th>
+            <th>Supplier</th>
+            <th>Date</th>
+            <th>Quantity</th>
+            <th>Price</th>
+            <th>Location</th>
+            <th>IUD</th>
+            
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model.Inventory)
+        {
+            <tr>
+                <td>@item.Item</td>
+                <td>@item.Description</td>
+                <td>@item.Supplier</td>
+                <td>@item.DateInv</td>
+                <td>@item.Quantity</td>
+                <td>@item.Price.ToString("C", CultureInfo.GetCultureInfo("en-PH"))</td>
+                <td>@item.Location</td>
+                <td>@item.IUD</td>
+            </tr>
+        }
+    </tbody>
+</table>
+

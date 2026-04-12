@@ -1,0 +1,166 @@
+﻿@page
+@model Kool_Ref_Inventory_System.Pages.ServiceModel
+@using System.Globalization;
+
+<!--
+    Report Add Button
+-->
+<button class="btn btn-success" id="reportAdd">Add Report</button>
+<dialog id="reportWindow">
+    <h2>Service & Inventory Report<button id="reportClose">Close</button></h2>
+    <table class="inventory-table">
+        <form method="post" asp-page="Service">
+            <label for="workscope">Work Scope</label><br>
+            <input type="text" id="workscope" asp-for="WorkScope" required><br>
+
+            <label for="timein">Time In</label><br>
+            <input type="time" id="timein" asp-for="TimeIn" required><br>
+
+            <label for="timeout">Time Out</label><br>
+            <input type="time" id="timeout" asp-for="TimeOut" required><br>
+
+            <label for="datestarted">Date Started</label><br>
+            <input type="date" id="datestarted" asp-for="DateStarted" required><br>
+
+            <label for="dateended">Date Ended</label><br>
+            <input type="date" id="dateended" asp-for="DateEnded" required><br>
+
+            <label for="customer">Customer Name</label><br>
+            <input type="text" id="customer" asp-for="Customer" required><br>
+
+            <label for="address">Address</label><br>
+            <input type="text" id="address" asp-for="Address" required><br><br>
+
+            <div id="technician-list">
+                <label>Technicians</label>
+                <div class="input-group mb-2">
+                    <input type="text" name="Technician" class="form-control" asp-for="Technician[0]" placeholder="Enter Technician 0" required/>
+                </div>
+            </div>
+
+            <button type="button" class="btn btn-success" onclick="addRow()">+ Add Technician</button>
+            <button type="button" class="btn btn-danger" onclick="removeRow()">Remove Technician</button><br>
+
+            <label for="item">Item Name</label><br>
+            <input type="text" id="item" asp-for="Item" required><br>
+
+            <label for="description">Description</label><br>
+            <textarea asp-for="Description" rows="1" cols="50" required></textarea><br>
+
+            <label for="supplier">Supplier Name</label><br>
+            <input type="text" id="supplier" asp-for="Supplier" required><br>
+
+            <label for="datenow">Date</label><br>
+            <input type="date" id="datenow" asp-for="Date" required><br>
+
+            <label for="quantity">Quantity</label><br>
+            <input type="number" id="quantity" asp-for="Quantity" required><br>
+
+            <label for="price">Price</label><br>
+            <input type="number" step="0.01" id="price" asp-for="Price" required><br>
+
+            <label for="location">Location</label><br>
+            <input type="text" id="location" asp-for="Location" required><br>
+
+            <label for="dr">Delivery Receipt</label><br>
+            <input type="number" id="dr" asp-for="DeliveryReceipt"><br>
+
+            <label for="iv">InVoice</label><br>
+            <input type="number" id="iv" asp-for="InVoice"><br>
+
+            <button type="submit">Add Report</button>
+        </form>
+    </table>
+</dialog>
+<script>
+    const reportAdd = document.getElementById("reportAdd"), reportClose = document.getElementById("reportClose"), reportWindow = document.getElementById("reportWindow");
+    reportAdd.addEventListener("click", () => {
+        reportWindow.showModal();
+    });
+    reportClose.addEventListener("click", () => {
+        reportWindow.close();
+        });
+
+
+
+    var index = 1;
+    function addRow() {
+        const container = document.getElementById('technician-list');
+    
+        // Create a new wrapper div
+        const row = document.createElement('div');
+        row.className = 'input-group mb-2';
+
+        // Add the input and the remove button
+        if(index < 10) {
+
+            row.innerHTML = `
+                <input type="text" class="form-control" asp-for="Technician[${index}]" placeholder="Enter Technician ${index}"/>`;
+
+            container.appendChild(row);
+            index++;
+        } else
+            alert("Maximum of 10 technicians allowed.");
+
+    }
+
+    function removeRow() {
+        const container = document.getElementById('technician-list');
+        const rows = container.querySelectorAll('.input-group');
+
+        if (rows.length > 1) {
+            rows[rows.length - 1].remove();
+            index--;
+        }
+    }
+</script>
+
+<table class="general-table">
+    <thead>
+        <tr>
+            <th>Technicians</th>
+            <th>Work Scope</th>
+            <th>Time (In - Out)</th>
+            <th>Dates (Start - End)</th>
+            <th>Customer & Address</th>
+            <th>IUD</th>
+            @* --- Inventory Starts Here --- *@
+            <th>Item Details</th>
+            <th>Supplier & Date</th>
+            <th>Qty & Price</th>
+            <th>Location</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var row in Model.Records)
+        {
+            <tr>
+                <td>
+                    @foreach (var tech in row.Technicians)
+                    {
+                        <div>@tech</div>
+                    }
+                </td>
+
+                <td>@row.ServiceReport.WorkScope</td>
+                <td>@row.ServiceReport.TimeIn - @row.ServiceReport.TimeOut</td>
+                <td>@row.ServiceReport.DateStarted - @row.ServiceReport.DateEnded</td>
+
+                <td>
+                    <strong>@row.ServiceReport.Customer</strong><br />
+                    <small>@row.ServiceReport.Address</small>
+                </td>
+
+                <td>@row.ServiceReport.IUD</td>
+                <td>
+                    <strong>@row.Inventory.Item</strong><br />
+                    <small>@row.Inventory.Description</small>
+                </td>
+
+                <td>@row.Inventory.Supplier<br />@row.Inventory.DateInv</td>
+                <td>@row.Inventory.Quantity x @row.Inventory.Price.ToString("C")</td>
+                <td>@row.Inventory.Location</td>
+            </tr>
+        }
+    </tbody>
+</table>
