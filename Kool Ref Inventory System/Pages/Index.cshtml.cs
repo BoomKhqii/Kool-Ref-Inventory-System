@@ -25,17 +25,17 @@ namespace Kool_Ref_Inventory_System.Pages
                 conn.Open();
                 string query = @"
                 SELECT 
-                    item AS products,
+                    Item AS products,
                     SUM(
                         CASE 
-                            WHEN deliveryReceipt IS NOT NULL THEN quantity       -- add stock
-                            WHEN inVoice IS NOT NULL THEN -quantity      -- remove stock
+                            WHEN deliveryReceipt IS NOT NULL AND inVoice IS NULL THEN Quantity       -- add stock
+                            WHEN inVoice IS NOT NULL AND deliveryReceipt IS NULL THEN -Quantity      -- remove stock
                             ELSE 0
                         END
-                    ) AS quantity
+                    ) AS Quantity
                 FROM Koolref.dbo.InandOutSystem
-                GROUP BY item
-                ORDER BY item;";
+                GROUP BY Item
+                ORDER BY Quantity ASC;";
 
                 using (SqlCommand cmd = new SqlCommand(query, conn))
                 {

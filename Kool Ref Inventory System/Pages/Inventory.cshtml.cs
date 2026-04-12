@@ -17,7 +17,7 @@ namespace Kool_Ref_Inventory_System.Pages
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
                 conn.Open();
-                string query = "SELECT * FROM dbo.InandOutSystem";
+                string query = "SELECT * FROM dbo.InandOutSystem ORDER BY Item ASC;";
 
                 using (SqlCommand cmd = new SqlCommand(query, conn))
                 {

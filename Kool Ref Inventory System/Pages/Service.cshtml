@@ -2,145 +2,68 @@
 @model Kool_Ref_Inventory_System.Pages.ServiceModel
 @using System.Globalization;
 
-
-<button id="drAdd">Add Delivery Receipt</button>
-<dialog id="drWindow">
-    <h2>Delivery Receipt <button id="drClose">Close</button></h2>
+<!--
+    Report Add Button
+-->
+<button class="btn btn-success" id="reportAdd">Add Report</button>
+<dialog id="reportWindow">
+    <h2>Service & Inventory Report<button id="reportClose">Close</button></h2>
     <table class="inventory-table">
         <form method="post" asp-page="Service">
             <label for="workscope">Work Scope</label><br>
-            <input type="text" id="workscope" asp-for="WorkScope"><br>
+            <input type="text" id="workscope" asp-for="WorkScope" required><br>
 
             <label for="timein">Time In</label><br>
-            <input type="time" id="timein" asp-for="TimeIn"><br>
+            <input type="time" id="timein" asp-for="TimeIn" required><br>
 
             <label for="timeout">Time Out</label><br>
-            <input type="time" id="timeout" asp-for="TimeOut"><br>
+            <input type="time" id="timeout" asp-for="TimeOut" required><br>
 
             <label for="datestarted">Date Started</label><br>
-            <input type="date" id="datestarted" asp-for="DateStarted"><br>
+            <input type="date" id="datestarted" asp-for="DateStarted" required><br>
 
             <label for="dateended">Date Ended</label><br>
-            <input type="date" id="dateended" asp-for="DateEnded"><br>
+            <input type="date" id="dateended" asp-for="DateEnded" required><br>
 
             <label for="customer">Customer Name</label><br>
-            <input type="text" id="customer" asp-for="Customer"><br>
+            <input type="text" id="customer" asp-for="Customer" required><br>
 
             <label for="address">Address</label><br>
-            <input type="text" id="address" asp-for="Address"><br>
+            <input type="text" id="address" asp-for="Address" required><br><br>
 
             <div id="technician-list">
                 <label>Technicians</label>
                 <div class="input-group mb-2">
-                    <input type="text" name="Technician" class="form-control" asp-for="Technician" placeholder="Enter name"/>
-                    <button type="button" class="btn btn-danger" onclick="removeRow(this)">Remove</button>
+                    <input type="text" name="Technician" class="form-control" asp-for="Technician[0]" placeholder="Enter Technician 0" required/>
                 </div>
             </div>
 
-            <button type="button" class="btn btn-success" onclick="addRow()">+ Add Technician</button><br>
+            <button type="button" class="btn btn-success" onclick="addRow()">+ Add Technician</button>
+            <button type="button" class="btn btn-danger" onclick="removeRow()">Remove Technician</button><br>
 
             <label for="item">Item Name</label><br>
-            <input type="text" id="item" asp-for="Item"><br>
+            <input type="text" id="item" asp-for="Item" required><br>
 
             <label for="description">Description</label><br>
-            <textarea asp-for="Description" rows="1" cols="50"></textarea><br>
+            <textarea asp-for="Description" rows="1" cols="50" required></textarea><br>
 
             <label for="supplier">Supplier Name</label><br>
-            <input type="text" id="supplier" asp-for="Supplier"><br>
+            <input type="text" id="supplier" asp-for="Supplier" required><br>
 
             <label for="datenow">Date</label><br>
-            <input type="date" id="datenow" asp-for="Date"><br>
+            <input type="date" id="datenow" asp-for="Date" required><br>
 
             <label for="quantity">Quantity</label><br>
-            <input type="number" id="quantity" asp-for="Quantity"><br>
+            <input type="number" id="quantity" asp-for="Quantity" required><br>
 
             <label for="price">Price</label><br>
-            <input type="number" step="0.01" id="price" asp-for="Price"><br>
+            <input type="number" step="0.01" id="price" asp-for="Price" required><br>
 
             <label for="location">Location</label><br>
-            <input type="text" id="location" asp-for="Location"><br>
+            <input type="text" id="location" asp-for="Location" required><br>
 
             <label for="dr">Delivery Receipt</label><br>
             <input type="number" id="dr" asp-for="DeliveryReceipt"><br>
-
-            <button type="submit">Add Report</button>
-        </form>
-    </table>
-</dialog>
-<button id="ivAdd">Add In Voice</button>
-<dialog id="ivWindow">
-    <h2>InVoice <button id="ivClose">Close</button></h2>
-    <table class="inventory-table">
-        <form method="post" asp-page="Service">
-            <label for="workscope">Work Scope</label><br>
-            <input type="text" id="workscope" asp-for="WorkScope"><br>
-
-            <label for="timein">Time In</label><br>
-            <input type="time" id="timein" asp-for="TimeIn"><br>
-
-            <label for="timeout">Time Out</label><br>
-            <input type="time" id="timeout" asp-for="TimeOut"><br>
-
-            <label for="datestarted">Date Started</label><br>
-            <input type="date" id="datestarted" asp-for="DateStarted"><br>
-
-            <label for="dateended">Date Ended</label><br>
-            <input type="date" id="dateended" asp-for="DateEnded"><br>
-
-            <label for="customer">Customer Name</label><br>
-            <input type="text" id="customer" asp-for="Customer"><br>
-
-            <label for="address">Address</label><br>
-            <input type="text" id="address" asp-for="Address"><br><br>
-
-            <!--
-            <div id="technician-list2">
-                <label>Technicians</label>
-                <div class="input-group mb-22">
-                    <input type="text" name="InputTechnician[0]" class="form-control" placeholder="Enter name" />
-                    <button type="button" class="btn btn-danger" onclick="removeRow(this)">Remove</button>
-                </div>
-            </div>
-            <button type="button" class="btn btn-success" onclick="addRow2()">+ Add Technician</button><br>
-            -->
-
-            <button type="button" id="tech-but-temp">Technician List</button>
-            <dialog id="tech-diag-temp">
-                <button type="button" id="tech-close-temp">Close</button><br>
-                <label>Technicians</label><br>
-                <input type="text" asp-for="Technician[0]" placeholder="Enter Technician 1"><br>
-                <input type="text" asp-for="Technician[1]" placeholder="Enter Technician 2"><br>
-                <input type="text" asp-for="Technician[2]" placeholder="Enter Technician 3"><br>
-                <input type="text" asp-for="Technician[3]" placeholder="Enter Technician 4"><br>
-                <input type="text" asp-for="Technician[4]" placeholder="Enter Technician 5"><br>
-                <input type="text" asp-for="Technician[5]" placeholder="Enter Technician 6"><br>
-                <input type="text" asp-for="Technician[6]" placeholder="Enter Technician 7"><br>
-                <input type="text" asp-for="Technician[7]" placeholder="Enter Technician 8"><br>
-                <input type="text" asp-for="Technician[8]" placeholder="Enter Technician 9"><br>
-                <input type="text" asp-for="Technician[9]" placeholder="Enter Technician 10"><br>
-            </dialog><br>
-
-
-            <label for="item">Item Name</label><br>
-            <input type="text" id="item" asp-for="Item"><br>
-
-            <label for="description">Description</label><br>
-            <textarea asp-for="Description" rows="1" cols="50"></textarea><br>
-
-            <label for="supplier">Supplier Name</label><br>
-            <input type="text" id="supplier" asp-for="Supplier"><br>
-
-            <label for="datenow">Date</label><br>
-            <input type="date" id="datenow" asp-for="Date"><br>
-
-            <label for="quantity">Quantity</label><br>
-            <input type="number" id="quantity" asp-for="Quantity"><br>
-
-            <label for="price">Price</label><br>
-            <input type="number" step="0.01" id="price" asp-for="Price"><br>
-
-            <label for="location">Location</label><br>
-            <input type="text" id="location" asp-for="Location"><br>
 
             <label for="iv">InVoice</label><br>
             <input type="number" id="iv" asp-for="InVoice"><br>
@@ -150,36 +73,17 @@
     </table>
 </dialog>
 <script>
-    const drAdd = document.getElementById("drAdd"), drClose = document.getElementById("drClose"), drWindow = document.getElementById("drWindow");
-    const ivAdd = document.getElementById("ivAdd"), ivClose = document.getElementById("ivClose"), ivWindow = document.getElementById("ivWindow");
-
-
-    // Delivery Receipt Add and close
-    drAdd.addEventListener("click", () => {
-        drWindow.showModal();
+    const reportAdd = document.getElementById("reportAdd"), reportClose = document.getElementById("reportClose"), reportWindow = document.getElementById("reportWindow");
+    reportAdd.addEventListener("click", () => {
+        reportWindow.showModal();
     });
-    drClose.addEventListener("click", () => {
-        drWindow.close();
-        });
-
-    // Invoice Add and Close
-    ivAdd.addEventListener("click", () => {
-        ivWindow.showModal();
-    });
-    ivClose.addEventListener("click", () => {
-        ivWindow.close();
-        });
-
-    // temp technician dialog
-    const techtemp_button = document.getElementById("tech-but-temp"), techtemp_close = document.getElementById("tech-close-temp"), techtemp_diag = document.getElementById("tech-diag-temp");
-    techtemp_button.addEventListener("click", () => {
-        techtemp_diag.showModal();
-    });
-    techtemp_close.addEventListener("click", () => {
-        techtemp_diag.close();
+    reportClose.addEventListener("click", () => {
+        reportWindow.close();
         });
 
 
+
+    var index = 1;
     function addRow() {
         const container = document.getElementById('technician-list');
     
@@ -188,37 +92,25 @@
         row.className = 'input-group mb-2';
 
         // Add the input and the remove button
-        row.innerHTML = `
-            <input type="text" name="Technician" class="form-control" asp-for="Technician" placeholder="Enter name"/>
-            <button type="button" class="btn btn-danger" onclick="removeRow(this)">Remove</button>
-        `;
+        if(index < 10) {
 
-        container.appendChild(row);
+            row.innerHTML = `
+                <input type="text" class="form-control" asp-for="Technician[${index}]" placeholder="Enter Technician ${index}"/>`;
+
+            container.appendChild(row);
+            index++;
+        } else
+            alert("Maximum of 10 technicians allowed.");
+
     }
 
-        function addRow2() {
-        const container = document.getElementById('technician-list2');
+    function removeRow() {
+        const container = document.getElementById('technician-list');
+        const rows = container.querySelectorAll('.input-group');
 
-        // Count existing rows to get the correct next index
-        const index = container.getElementsByClassName('input-group').length;
-
-        const row = document.createElement('div');
-        row.className = 'input-group mb-22';
-
-        // Set name to "InputTechnician[index]"
-        row.innerHTML = `
-            <input type="text" name="Technician[${index}]" class="form-control" placeholder="Enter name"/>
-            <button type="button" class="btn btn-danger" onclick="removeRow(this)">Remove</button>
-        `;
-
-        container.appendChild(row);
-    }
-
-    function removeRow(button) {
-        // Prevent removing the very last input if you want at least one
-        const rows = document.querySelectorAll('.input-group');
         if (rows.length > 1) {
-            button.parentElement.remove();
+            rows[rows.length - 1].remove();
+            index--;
         }
     }
 </script>
