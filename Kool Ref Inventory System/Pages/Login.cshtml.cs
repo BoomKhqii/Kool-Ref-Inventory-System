@@ -67,6 +67,8 @@ namespace Kool_Ref_Inventory_System.Pages
                         ModelState.AddModelError("", "Invalid username or password");
                         return Page();
                     }
+
+                    HttpContext.Session.SetString("Username", Username);
                 }
             }
 

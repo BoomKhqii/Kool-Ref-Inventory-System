@@ -13,8 +13,12 @@ namespace Kool_Ref_Inventory_System.Pages
         public List<Items> Inventory { get; set; }
 
 
-        public void OnGet()
+        public IActionResult OnGet()
         {
+            if (HttpContext.Session.GetString("Username") == null)
+            {
+                return RedirectToPage("/Login");
+            }
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
                 conn.Open();
@@ -45,6 +49,8 @@ namespace Kool_Ref_Inventory_System.Pages
                     }
                 }
             }
+
+            return Page();
         }
     }
 

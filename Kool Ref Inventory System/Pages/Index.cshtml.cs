@@ -19,8 +19,12 @@ namespace Kool_Ref_Inventory_System.Pages
         //string connectionString = "Server=localhost\\SQLEXPRESS;Database=Koolref;Trusted_Connection=True;TrustServerCertificate=True;";
         public List<Display> Index { get; set; } = new();
 
-        public void OnGet()
+        public IActionResult OnGet()
         {
+            if (HttpContext.Session.GetString("Username") == null)
+            {
+                return RedirectToPage("/Login");
+            }
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
                 conn.Open();
@@ -54,6 +58,8 @@ namespace Kool_Ref_Inventory_System.Pages
                     }
                 }
             }
+
+            return Page();
         }
     }
     public class Display
