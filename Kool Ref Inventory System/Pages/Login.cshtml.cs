@@ -13,7 +13,8 @@ namespace Kool_Ref_Inventory_System.Pages
         [BindProperty] public string Username { get; set; }
         [BindProperty] public string Password { get; set; }
 
-        string connectionString = "Server=localhost\\SQLEXPRESS;Database=Koolref;Trusted_Connection=True;TrustServerCertificate=True;";
+        //string connectionString = "Server=localhost\\SQLEXPRESS;Database=Koolref;Trusted_Connection=True;TrustServerCertificate=True;";
+        string connectionString = "Server=db,1433;Database=Koolref;User Id=sa;Password=YourStrongPassword123!;TrustServerCertificate=True;";
 
         /*
          * Login Test
