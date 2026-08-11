@@ -1,46 +1,73 @@
-﻿@page
-@using System.Globalization;
+@page
+@using System.Globalization
 @model InventoryModel
-<h1>@ViewData["Title"]</h1>
+@{
+    ViewData["Title"] = "Inventory ledger";
+    var recordCount = Model.Inventory?.Count ?? 0;
+    var unitsProcessed = Model.Inventory?.Sum(item => item.Quantity) ?? 0;
+}
 
-<!--
-Todo: 
-Add inventory
-    -Filter: DR or IV
-    -Search
-    - Service Report
-    - User 
-    - Table: include date
--->
+<section class="page-heading">
+    <div>
+        <p class="eyebrow">Movement history</p>
+        <h1>Inventory ledger</h1>
+        <p class="page-lead">Review incoming and outgoing inventory records in one organised view.</p>
+    </div>
+    <a class="button button-secondary" asp-page="/Service">Open service reports</a>
+</section>
 
-<table class="inventory-table">
-    <thead>
-        <tr>
-            <th>Item</th>
-            <th>Description</th>
-            <th>Supplier</th>
-            <th>Date</th>
-            <th>Quantity</th>
-            <th>Price</th>
-            <th>Location</th>
-            <th>IUD</th>
-            
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var item in Model.Inventory)
-        {
-            <tr>
-                <td>@item.Item</td>
-                <td>@item.Description</td>
-                <td>@item.Supplier</td>
-                <td>@item.DateInv</td>
-                <td>@item.Quantity</td>
-                <td>@item.Price.ToString("C", CultureInfo.GetCultureInfo("en-PH"))</td>
-                <td>@item.Location</td>
-                <td>@item.IUD</td>
-            </tr>
-        }
-    </tbody>
-</table>
+<section class="compact-metrics" aria-label="Inventory summary">
+    <div><span>Ledger records</span><strong>@recordCount.ToString("N0")</strong></div>
+    <div><span>Units processed</span><strong>@unitsProcessed.ToString("N0")</strong></div>
+</section>
 
+<section class="surface-card">
+    <div class="surface-header">
+        <div>
+            <p class="section-kicker">Transaction history</p>
+            <h2>All inventory records</h2>
+        </div>
+        <span class="record-count">@recordCount @(recordCount == 1 ? "record" : "records")</span>
+    </div>
+
+    <div class="table-responsive">
+        <table class="data-table data-table-wide">
+            <thead>
+                <tr>
+                    <th scope="col">Item</th>
+                    <th scope="col">Description</th>
+                    <th scope="col">Supplier</th>
+                    <th scope="col">Date</th>
+                    <th scope="col">Quantity</th>
+                    <th scope="col">Unit price</th>
+                    <th scope="col">Location</th>
+                    <th scope="col">Reference</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Inventory == null || Model.Inventory.Count == 0)
+                {
+                    <tr>
+                        <td colspan="8" class="empty-state">No inventory transactions are available yet.</td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (var item in Model.Inventory)
+                    {
+                        <tr>
+                            <td><strong class="item-name">@item.Item</strong></td>
+                            <td class="description-cell">@item.Description</td>
+                            <td>@item.Supplier</td>
+                            <td class="no-wrap">@(item.DateInv ?? "—")</td>
+                            <td><span class="quantity-chip">@item.Quantity.ToString("N0")</span></td>
+                            <td class="no-wrap">@item.Price.ToString("C", CultureInfo.GetCultureInfo("en-PH"))</td>
+                            <td>@item.Location</td>
+                            <td><span class="reference-code">@item.IUD</span></td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</section>
