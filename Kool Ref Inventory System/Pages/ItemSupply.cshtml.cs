@@ -78,7 +78,7 @@ namespace Kool_Ref_Inventory_System.Pages
                 using var command = new SqlCommand(query, connection);
                 command.Parameters.Add("@code", SqlDbType.NVarChar, 50).Value = AddItem.Code.Trim();
                 command.Parameters.Add("@name", SqlDbType.NVarChar, 200).Value = AddItem.Name.Trim();
-                AddPriceParameter(command, "@price", AddItem.Price ?? 0m);
+                AddPriceParameter(command, "@price", AddItem.Price);
                 command.ExecuteNonQuery();
             }
             catch (SqlException exception) when (exception.Number is 2601 or 2627)
@@ -128,7 +128,7 @@ namespace Kool_Ref_Inventory_System.Pages
                 using var command = new SqlCommand(query, connection);
                 command.Parameters.Add("@code", SqlDbType.NVarChar, 50).Value = EditItem.Code.Trim();
                 command.Parameters.Add("@name", SqlDbType.NVarChar, 200).Value = EditItem.Name.Trim();
-                AddPriceParameter(command, "@price", EditItem.Price!.Value);
+                AddPriceParameter(command, "@price", EditItem.Price);
 
                 if (command.ExecuteNonQuery() == 0)
                 {
@@ -173,7 +173,7 @@ namespace Kool_Ref_Inventory_System.Pages
                 {
                     Code = reader["itemId"]?.ToString() ?? string.Empty,
                     Name = reader["name"]?.ToString() ?? string.Empty,
-                    Price = reader["price"] == DBNull.Value ? 0m : Convert.ToDecimal(reader["price"])
+                    Price = reader["price"] == DBNull.Value ? null : Convert.ToDecimal(reader["price"])
                 });
             }
         }
@@ -184,10 +184,10 @@ namespace Kool_Ref_Inventory_System.Pages
             .Replace("_", "\\_", StringComparison.Ordinal)
             .Replace("[", "\\[", StringComparison.Ordinal);
 
-        private static void AddPriceParameter(SqlCommand command, string name, decimal value)
+        private static void AddPriceParameter(SqlCommand command, string name, decimal? value)
         {
             SqlParameter parameter = command.Parameters.Add(name, SqlDbType.Money);
-            parameter.Value = value;
+            parameter.Value = value.HasValue ? value.Value : DBNull.Value;
         }
 
         public class AddItemInput
@@ -200,7 +200,7 @@ namespace Kool_Ref_Inventory_System.Pages
             [StringLength(200, ErrorMessage = "Item name cannot be longer than 200 characters.")]
             public string Name { get; set; } = string.Empty;
 
-            [Range(typeof(decimal), "0", "9999999999999999.99", ErrorMessage = "Price cannot be negative.")]
+            [Range(typeof(decimal), "0.01", "922337203685477.5807", ErrorMessage = "Price must be greater than zero, or left blank when unknown.")]
             public decimal? Price { get; set; }
         }
 
@@ -214,8 +214,7 @@ namespace Kool_Ref_Inventory_System.Pages
             [StringLength(200, ErrorMessage = "Item name cannot be longer than 200 characters.")]
             public string Name { get; set; } = string.Empty;
 
-            [Required(ErrorMessage = "Price is required.")]
-            [Range(typeof(decimal), "0", "9999999999999999.99", ErrorMessage = "Price cannot be negative.")]
+            [Range(typeof(decimal), "0.01", "922337203685477.5807", ErrorMessage = "Price must be greater than zero, or left blank when unknown.")]
             public decimal? Price { get; set; }
         }
 
@@ -223,7 +222,7 @@ namespace Kool_Ref_Inventory_System.Pages
         {
             public string Code { get; set; } = string.Empty;
             public string Name { get; set; } = string.Empty;
-            public decimal Price { get; set; }
+            public decimal? Price { get; set; }
         }
     }
 }

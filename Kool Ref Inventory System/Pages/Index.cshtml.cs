@@ -21,11 +21,12 @@ namespace Kool_Ref_Inventory_System.Pages
 
         public IActionResult OnGet()
         {
-            if (HttpContext.Session.GetString("Username") == null)
-            {
-                return RedirectToPage("/Login");
-            }
-            
+            return RedirectToPage("/ItemSupply");
+        }
+
+        // Kept temporarily so the previous quantity query can be restored if stock tracking is added later.
+        private void LoadStockOverview()
+        {
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
                 conn.Open();
@@ -34,14 +35,12 @@ namespace Kool_Ref_Inventory_System.Pages
                     il.name AS products,
                     ISNULL(SUM(dpi.quantity), 0) AS Quantity
                 FROM Koolref.dbo.ItemList AS il
-
-                LEFT JOIN Koolref.dbo.DeliveryProcessedItem AS dpi
-                    ON il.itemId = dpi.itemId
-
+                    LEFT JOIN Koolref.dbo.DeliveryProcessedItem AS dpi
+                        ON CONVERT(NVARCHAR(50), dpi.itemId)
+                        = CONVERT(NVARCHAR(50), il.itemId)
                 GROUP BY
                     il.itemId,
                     il.name
-
                 ORDER BY
                     Quantity ASC;";
 
@@ -61,7 +60,6 @@ namespace Kool_Ref_Inventory_System.Pages
                     }
                 }
             }
-            return Page();
         }
     }
     public class Display

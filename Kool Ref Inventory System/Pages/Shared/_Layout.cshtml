@@ -17,7 +17,7 @@
     <header class="app-header">
         <nav class="navbar navbar-expand-lg" aria-label="Main navigation">
             <div class="container-fluid app-container">
-                <a class="navbar-brand" asp-area="" asp-page="/Index" aria-label="Kool Refrigeration inventory home">
+                <a class="navbar-brand" asp-area="" asp-page="/ItemSupply" aria-label="Kool Refrigeration inventory home">
                     <img src="~/css/logo_KoolRefrigerationEnterprisesInc2.png" alt="Kool Refrigeration Enterprises" />
                     <span class="brand-title">
                         <strong>Inventory</strong>
@@ -33,16 +33,12 @@
                 <div class="collapse navbar-collapse" id="primaryNavigation">
                     <ul class="navbar-nav ms-auto align-items-lg-center">
                         <li class="nav-item">
-                            <a class="nav-link @(currentPage == "/Index" ? "active" : null)" asp-area="" asp-page="/Index"
-                               aria-current="@(currentPage == "/Index" ? "page" : null)">Stock overview</a>
+                            <a class="nav-link @(currentPage == "/ItemSupply" ? "active" : null)" asp-area="" asp-page="/ItemSupply"
+                               aria-current="@(currentPage == "/ItemSupply" ? "page" : null)">Item supplies</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link @(currentPage == "/Inventory" ? "active" : null)" asp-area="" asp-page="/Inventory"
                                aria-current="@(currentPage == "/Inventory" ? "page" : null)">Inventory ledger</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link @(currentPage == "/ItemSupply" ? "active" : null)" asp-area="" asp-page="/ItemSupply"
-                               aria-current="@(currentPage == "/ItemSupply" ? "page" : null)">Item supplies</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link @(currentPage == "/Service" ? "active" : null)" asp-area="" asp-page="/Service"

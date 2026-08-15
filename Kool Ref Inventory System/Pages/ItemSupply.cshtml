@@ -45,7 +45,7 @@
                 <tr>
                     <th scope="col">Code</th>
                     <th scope="col">Item name</th>
-                    <th scope="col">Price</th>
+                    <th scope="col">Price per item</th>
                     <th scope="col" class="actions-column">Actions</th>
                 </tr>
             </thead>
@@ -67,13 +67,15 @@
                         <tr>
                             <td><span class="reference-code">@item.Code</span></td>
                             <td><strong class="item-name">@item.Name</strong></td>
-                            <td class="no-wrap">@item.Price.ToString("C", pesoCulture)</td>
+                            <td class="no-wrap">
+                                @(item.Price is > 0 ? item.Price.Value.ToString("C", pesoCulture) : "No input")
+                            </td>
                             <td class="actions-column">
                                 <button class="button button-secondary button-small item-edit"
                                         type="button"
                                         data-code="@item.Code"
                                         data-name="@item.Name"
-                                        data-price="@item.Price.ToString("0.00", CultureInfo.InvariantCulture)">
+                                        data-price="@(item.Price is > 0 ? item.Price.Value.ToString("0.00", CultureInfo.InvariantCulture) : string.Empty)">
                                     Edit
                                 </button>
                             </td>
@@ -92,7 +94,7 @@
             <div>
                 <p class="section-kicker">New catalogue item</p>
                 <h2 id="addItemDialogTitle">Add item supply</h2>
-                <p>Code and item name are required. A blank price starts at ₱0.00.</p>
+                <p>Code and item name are required. Leave the price blank when it is not known.</p>
             </div>
             <button class="dialog-close" type="button" data-dialog-close aria-label="Close add item form">×</button>
         </div>
@@ -105,10 +107,10 @@
                     <span asp-validation-for="AddItem.Code" class="field-error"></span>
                 </div>
                 <div class="field">
-                    <label asp-for="AddItem.Price">Price</label>
+                    <label asp-for="AddItem.Price">Price per item</label>
                     <div class="input-prefix">
                         <span>₱</span>
-                        <input asp-for="AddItem.Price" type="number" min="0" step="0.01" placeholder="0.00" />
+                        <input asp-for="AddItem.Price" type="number" min="0.01" step="0.01" placeholder="Optional" />
                     </div>
                     <span asp-validation-for="AddItem.Price" class="field-error"></span>
                 </div>
@@ -134,7 +136,7 @@
             <div>
                 <p class="section-kicker">Catalogue maintenance</p>
                 <h2 id="editItemDialogTitle">Edit item supply</h2>
-                <p>Update the item name or price. The item code cannot be changed.</p>
+                <p>Update the item name or price. Leave the price blank when it is not known.</p>
             </div>
             <button class="dialog-close" type="button" data-dialog-close aria-label="Close edit item form">×</button>
         </div>
@@ -146,10 +148,10 @@
                     <input id="editItemCodeDisplay" type="text" disabled />
                 </div>
                 <div class="field">
-                    <label asp-for="EditItem.Price">Price</label>
+                    <label asp-for="EditItem.Price">Price per item</label>
                     <div class="input-prefix">
                         <span>₱</span>
-                        <input asp-for="EditItem.Price" id="editItemPrice" type="number" min="0" step="0.01" required />
+                        <input asp-for="EditItem.Price" id="editItemPrice" type="number" min="0.01" step="0.01" placeholder="No input" />
                     </div>
                     <span asp-validation-for="EditItem.Price" class="field-error"></span>
                 </div>

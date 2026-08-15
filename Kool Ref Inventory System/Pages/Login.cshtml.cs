@@ -73,7 +73,7 @@ namespace Kool_Ref_Inventory_System.Pages
                 }
             }
 
-            return RedirectToPage("/Inventory");
+            return RedirectToPage("/ItemSupply");
         }
 
         public string HashBCrypt(string data) { return BCrypt.Net.BCrypt.HashPassword(data); }
