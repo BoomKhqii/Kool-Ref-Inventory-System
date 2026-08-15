@@ -1,0 +1,206 @@
+@page
+@using System.Globalization
+@model Kool_Ref_Inventory_System.Pages.ItemSupplyModel
+@{
+    ViewData["Title"] = "Item supplies";
+    var itemCount = Model.Items.Count;
+    var pesoCulture = CultureInfo.GetCultureInfo("en-PH");
+}
+
+<section class="page-heading">
+    <div>
+        <p class="eyebrow">Supply catalogue</p>
+        <h1>Item supplies</h1>
+        <p class="page-lead">Find items by name and maintain their catalogue name and price.</p>
+    </div>
+    <button class="button button-primary" id="itemAdd" type="button">+ Add item</button>
+</section>
+
+@if (!string.IsNullOrWhiteSpace(Model.SuccessMessage))
+{
+    <div class="app-alert app-alert-success" role="status">@Model.SuccessMessage</div>
+}
+
+<section class="surface-card">
+    <div class="supply-toolbar">
+        <form method="get" class="supply-search" role="search">
+            <div class="field">
+                <label for="SearchTerm">Search item name</label>
+                <div class="search-control">
+                    <input asp-for="SearchTerm" type="search" placeholder="Enter an item name" autocomplete="off" />
+                    <button class="button button-secondary" type="submit">Search</button>
+                    @if (!string.IsNullOrWhiteSpace(Model.SearchTerm))
+                    {
+                        <a class="button button-ghost" asp-page="/ItemSupply">Clear</a>
+                    }
+                </div>
+            </div>
+        </form>
+        <span class="record-count">@itemCount @(itemCount == 1 ? "item" : "items")</span>
+    </div>
+
+    <div class="table-responsive">
+        <table class="data-table supply-table">
+            <thead>
+                <tr>
+                    <th scope="col">Code</th>
+                    <th scope="col">Item name</th>
+                    <th scope="col">Price</th>
+                    <th scope="col" class="actions-column">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Items.Count == 0)
+                {
+                    <tr>
+                        <td colspan="4" class="empty-state">
+                            @(string.IsNullOrWhiteSpace(Model.SearchTerm)
+                                ? "No supply items are available yet."
+                                : $"No items match ‘{Model.SearchTerm}’.")
+                        </td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (var item in Model.Items)
+                    {
+                        <tr>
+                            <td><span class="reference-code">@item.Code</span></td>
+                            <td><strong class="item-name">@item.Name</strong></td>
+                            <td class="no-wrap">@item.Price.ToString("C", pesoCulture)</td>
+                            <td class="actions-column">
+                                <button class="button button-secondary button-small item-edit"
+                                        type="button"
+                                        data-code="@item.Code"
+                                        data-name="@item.Name"
+                                        data-price="@item.Price.ToString("0.00", CultureInfo.InvariantCulture)">
+                                    Edit
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<dialog class="report-dialog item-dialog" id="addItemDialog" aria-labelledby="addItemDialogTitle">
+    <form method="post" asp-page-handler="Add" class="report-form">
+        <input type="hidden" name="SearchTerm" value="@Model.SearchTerm" />
+        <div class="dialog-header">
+            <div>
+                <p class="section-kicker">New catalogue item</p>
+                <h2 id="addItemDialogTitle">Add item supply</h2>
+                <p>Code and item name are required. A blank price starts at ₱0.00.</p>
+            </div>
+            <button class="dialog-close" type="button" data-dialog-close aria-label="Close add item form">×</button>
+        </div>
+        <div class="dialog-body">
+            <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
+            <div class="form-grid">
+                <div class="field">
+                    <label asp-for="AddItem.Code">Item code</label>
+                    <input asp-for="AddItem.Code" type="text" maxlength="50" placeholder="Required" autocomplete="off" />
+                    <span asp-validation-for="AddItem.Code" class="field-error"></span>
+                </div>
+                <div class="field">
+                    <label asp-for="AddItem.Price">Price</label>
+                    <div class="input-prefix">
+                        <span>₱</span>
+                        <input asp-for="AddItem.Price" type="number" min="0" step="0.01" placeholder="0.00" />
+                    </div>
+                    <span asp-validation-for="AddItem.Price" class="field-error"></span>
+                </div>
+                <div class="field field-span-2">
+                    <label asp-for="AddItem.Name">Item name</label>
+                    <input asp-for="AddItem.Name" type="text" maxlength="200" placeholder="Required" />
+                    <span asp-validation-for="AddItem.Name" class="field-error"></span>
+                </div>
+            </div>
+        </div>
+        <div class="dialog-footer">
+            <button class="button button-ghost" type="button" data-dialog-close>Cancel</button>
+            <button class="button button-primary" type="submit">Add item</button>
+        </div>
+    </form>
+</dialog>
+
+<dialog class="report-dialog item-dialog" id="editItemDialog" aria-labelledby="editItemDialogTitle">
+    <form method="post" asp-page-handler="Edit" class="report-form">
+        <input type="hidden" name="SearchTerm" value="@Model.SearchTerm" />
+        <input type="hidden" asp-for="EditItem.Code" id="editItemCode" />
+        <div class="dialog-header">
+            <div>
+                <p class="section-kicker">Catalogue maintenance</p>
+                <h2 id="editItemDialogTitle">Edit item supply</h2>
+                <p>Update the item name or price. The item code cannot be changed.</p>
+            </div>
+            <button class="dialog-close" type="button" data-dialog-close aria-label="Close edit item form">×</button>
+        </div>
+        <div class="dialog-body">
+            <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
+            <div class="form-grid">
+                <div class="field">
+                    <label for="editItemCodeDisplay">Item code</label>
+                    <input id="editItemCodeDisplay" type="text" disabled />
+                </div>
+                <div class="field">
+                    <label asp-for="EditItem.Price">Price</label>
+                    <div class="input-prefix">
+                        <span>₱</span>
+                        <input asp-for="EditItem.Price" id="editItemPrice" type="number" min="0" step="0.01" required />
+                    </div>
+                    <span asp-validation-for="EditItem.Price" class="field-error"></span>
+                </div>
+                <div class="field field-span-2">
+                    <label asp-for="EditItem.Name">Item name</label>
+                    <input asp-for="EditItem.Name" id="editItemName" type="text" maxlength="200" required />
+                    <span asp-validation-for="EditItem.Name" class="field-error"></span>
+                </div>
+            </div>
+        </div>
+        <div class="dialog-footer">
+            <button class="button button-ghost" type="button" data-dialog-close>Cancel</button>
+            <button class="button button-primary" type="submit">Save changes</button>
+        </div>
+    </form>
+</dialog>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        (() => {
+            const addDialog = document.getElementById("addItemDialog");
+            const editDialog = document.getElementById("editItemDialog");
+
+            document.getElementById("itemAdd").addEventListener("click", () => addDialog.showModal());
+
+            document.querySelectorAll("[data-dialog-close]").forEach(button => {
+                button.addEventListener("click", () => button.closest("dialog").close());
+            });
+
+            [addDialog, editDialog].forEach(dialog => {
+                dialog.addEventListener("click", event => {
+                    if (event.target === dialog) dialog.close();
+                });
+            });
+
+            document.querySelectorAll(".item-edit").forEach(button => {
+                button.addEventListener("click", () => {
+                    document.getElementById("editItemCode").value = button.dataset.code;
+                    document.getElementById("editItemCodeDisplay").value = button.dataset.code;
+                    document.getElementById("editItemName").value = button.dataset.name;
+                    document.getElementById("editItemPrice").value = button.dataset.price;
+                    editDialog.showModal();
+                });
+            });
+
+            if (@Model.OpenAddDialog.ToString().ToLowerInvariant()) addDialog.showModal();
+            if (@Model.OpenEditDialog.ToString().ToLowerInvariant()) {
+                document.getElementById("editItemCodeDisplay").value = document.getElementById("editItemCode").value;
+                editDialog.showModal();
+            }
+        })();
+    </script>
+}
