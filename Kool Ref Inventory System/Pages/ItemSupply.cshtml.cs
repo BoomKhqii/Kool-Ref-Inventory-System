@@ -71,6 +71,23 @@ namespace Kool_Ref_Inventory_System.Pages
                 using var connection = new SqlConnection(_connectionString);
                 connection.Open();
 
+                const string duplicateQuery = @"
+                    SELECT COUNT(*)
+                    FROM dbo.ItemList
+                    WHERE itemId = @code;";
+
+                using (var duplicateCommand = new SqlCommand(duplicateQuery, connection))
+                {
+                    duplicateCommand.Parameters.Add("@code", SqlDbType.NVarChar, 50).Value = AddItem.Code.Trim();
+                    if (Convert.ToInt32(duplicateCommand.ExecuteScalar()) > 0)
+                    {
+                        ModelState.AddModelError("AddItem.Code", "That item code already exists.");
+                        LoadItems();
+                        OpenAddDialog = true;
+                        return Page();
+                    }
+                }
+
                 const string query = @"
                     INSERT INTO dbo.ItemList (itemId, [name], price)
                     VALUES (@code, @name, @price);";

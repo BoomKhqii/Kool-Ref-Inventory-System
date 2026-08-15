@@ -1,25 +1,111 @@
 @page
 @using System.Globalization
+@using System.Text.Json
 @model InventoryModel
 @{
     ViewData["Title"] = "Inventory ledger";
-    var recordCount = Model.Inventory?.Count ?? 0;
-    var unitsProcessed = Model.Inventory?.Sum(item => item.itemQuantity) ?? 0;
+    var recordCount = Model.Inventory.Count;
+    var unitsProcessed = Model.Inventory.Sum(item => item.itemQuantity);
+    var pesoCulture = CultureInfo.GetCultureInfo("en-PH");
+    var productCatalogJson = JsonSerializer.Serialize(Model.ProductCatalog, new JsonSerializerOptions
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+    });
+    var initialItemsJson = JsonSerializer.Serialize(Model.Delivery.Items.Select(item => new
+    {
+        itemId = item.ItemId,
+        productName = item.ProductName,
+        quantity = item.Quantity,
+        unitPrice = item.UnitPrice,
+        originalUnitPrice = item.OriginalUnitPrice
+    }), new JsonSerializerOptions
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+    });
 }
 
 <section class="page-heading">
     <div>
         <p class="eyebrow">Movement history</p>
         <h1>Inventory ledger</h1>
-        <p class="page-lead">Review incoming and outgoing inventory records in one organised view.</p>
+        <p class="page-lead">Review received inventory and create deliveries containing one or more valid supply items.</p>
     </div>
-    <a class="button button-secondary" asp-page="/Service">Open service reports</a>
+    <button class="button button-primary" id="deliveryAdd" type="button">+ Create delivery report</button>
 </section>
+
+@if (!string.IsNullOrWhiteSpace(Model.SuccessMessage))
+{
+    <div class="app-alert app-alert-success" role="status">@Model.SuccessMessage</div>
+}
 
 <section class="compact-metrics" aria-label="Inventory summary">
     <div><span>Ledger records</span><strong>@recordCount.ToString("N0")</strong></div>
     <div><span>Units processed</span><strong>@unitsProcessed.ToString("N0")</strong></div>
 </section>
+
+<dialog class="report-dialog delivery-dialog" id="deliveryDialog" aria-labelledby="deliveryDialogTitle">
+    <form method="post" asp-page-handler="CreateDelivery" class="report-form" id="deliveryForm">
+        <div class="dialog-header">
+            <div>
+                <p class="section-kicker">Incoming inventory</p>
+                <h2 id="deliveryDialogTitle">Create delivery report</h2>
+                <p>All items added below will be recorded under the same delivery receipt.</p>
+            </div>
+            <button class="dialog-close" id="deliveryClose" type="button" aria-label="Close delivery form">×</button>
+        </div>
+
+        <div class="dialog-body">
+            <div asp-validation-summary="All" class="validation-summary"></div>
+
+            <section class="form-section" aria-labelledby="deliveryDetailsHeading">
+                <div class="form-section-heading">
+                    <span>01</span>
+                    <div>
+                        <h3 id="deliveryDetailsHeading">Delivery details</h3>
+                        <p>Enter the receipt information once for this delivery.</p>
+                    </div>
+                </div>
+
+                <div class="form-grid">
+                    <div class="field">
+                        <label asp-for="Delivery.DeliveryReceipt">Delivery receipt</label>
+                        <input asp-for="Delivery.DeliveryReceipt" type="number" min="1" step="1" placeholder="Receipt number" />
+                        <span asp-validation-for="Delivery.DeliveryReceipt" class="field-error"></span>
+                    </div>
+                    <div class="field">
+                        <label asp-for="Delivery.Date">Date</label>
+                        <input asp-for="Delivery.Date" type="date" />
+                        <span asp-validation-for="Delivery.Date" class="field-error"></span>
+                    </div>
+                    <div class="field field-span-2">
+                        <label asp-for="Delivery.Location">Location</label>
+                        <input asp-for="Delivery.Location" type="text" maxlength="500" placeholder="Warehouse, supplier or receiving location" />
+                        <span asp-validation-for="Delivery.Location" class="field-error"></span>
+                    </div>
+                </div>
+            </section>
+
+            <section class="form-section" aria-labelledby="deliveryItemsHeading">
+                <div class="form-section-heading delivery-items-heading">
+                    <span>02</span>
+                    <div>
+                        <h3 id="deliveryItemsHeading">Delivery items</h3>
+                        <p>Type a product name and select it from the suggestions. Editing its price also updates Item Supplies.</p>
+                    </div>
+                    <button class="button button-secondary button-small" id="addDeliveryItem" type="button">+ Add item</button>
+                </div>
+
+                <div class="delivery-items" id="deliveryItems"></div>
+                <span asp-validation-for="Delivery.Items" class="field-error delivery-items-error"></span>
+            </section>
+        </div>
+
+        <div class="dialog-footer">
+            <button class="button button-ghost" id="deliveryCancel" type="button">Cancel</button>
+            <button class="button button-primary" type="submit">Save delivery report</button>
+        </div>
+    </form>
+</dialog>
 
 <section class="surface-card">
     <div class="surface-header">
@@ -34,20 +120,20 @@
         <table class="data-table data-table-wide">
             <thead>
                 <tr>
-                    <th scope="col">Delivery Receipt</th>
+                    <th scope="col">Delivery receipt</th>
                     <th scope="col">Date</th>
-                    <th scop="col">Location</th>
+                    <th scope="col">Location</th>
                     <th scope="col">Item name</th>
-                    <th scope="col">Price per</th>
+                    <th scope="col">Price per item</th>
                     <th scope="col">Quantity</th>
                     <th scope="col">Total price</th>
                 </tr>
             </thead>
             <tbody>
-                @if (Model.Inventory == null || Model.Inventory.Count == 0)
+                @if (Model.Inventory.Count == 0)
                 {
                     <tr>
-                        <td colspan="8" class="empty-state">No inventory transactions are available yet.</td>
+                        <td colspan="7" class="empty-state">No inventory transactions are available yet.</td>
                     </tr>
                 }
                 else
@@ -56,13 +142,20 @@
                     {
                         <tr>
                             <td><span class="reference-code">@item.deliveryReceipt</span></td>
-                            <td class="no-wrap">@(item.delivery_date ?? "—")</td>
+                            <td class="no-wrap">@item.delivery_date</td>
                             <td class="description-cell">@item.delivery_location</td>
                             <td><strong class="item-name">@item.itemName</strong></td>
-                            <td class="no-wrap">@item.itemPricePerX.ToString("C", CultureInfo.GetCultureInfo("en-PH"))</td>
+                            <td class="no-wrap">
+                                @(item.itemPricePerX.HasValue
+                                    ? item.itemPricePerX.Value.ToString("C", pesoCulture)
+                                    : "No input")
+                            </td>
                             <td><span class="quantity-chip">@item.itemQuantity.ToString("N0")</span></td>
-                            <td>@item.itemTotal</td>
-                            
+                            <td class="no-wrap">
+                                @(item.itemTotal.HasValue
+                                    ? item.itemTotal.Value.ToString("C", pesoCulture)
+                                    : "No input")
+                            </td>
                         </tr>
                     }
                 }
@@ -70,3 +163,243 @@
         </table>
     </div>
 </section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        (() => {
+            const productCatalog = @Html.Raw(productCatalogJson);
+            const initialItems = @Html.Raw(initialItemsJson);
+            const dialog = document.getElementById("deliveryDialog");
+            const form = document.getElementById("deliveryForm");
+            const itemContainer = document.getElementById("deliveryItems");
+            const addItemButton = document.getElementById("addDeliveryItem");
+            const currency = new Intl.NumberFormat("en-PH", {
+                style: "currency",
+                currency: "PHP",
+                minimumFractionDigits: 2
+            });
+
+            const normalise = value => (value || "").normalize("NFKD").toLocaleLowerCase().trim();
+
+            const closeDialog = () => dialog.close();
+            document.getElementById("deliveryAdd").addEventListener("click", () => dialog.showModal());
+            document.getElementById("deliveryClose").addEventListener("click", closeDialog);
+            document.getElementById("deliveryCancel").addEventListener("click", closeDialog);
+            dialog.addEventListener("click", event => {
+                if (event.target === dialog) closeDialog();
+            });
+
+            const rankProducts = query => {
+                const search = normalise(query);
+                if (!search) return [];
+
+                return productCatalog
+                    .map(product => {
+                        const name = normalise(product.name);
+                        const code = normalise(product.code);
+                        let score = 99;
+
+                        if (name === search) score = 0;
+                        else if (name.startsWith(search)) score = 1;
+                        else if (name.split(/\s+/).some(word => word.startsWith(search))) score = 2;
+                        else if (name.includes(search)) score = 3;
+                        else if (code.startsWith(search)) score = 4;
+
+                        return { product, score };
+                    })
+                    .filter(match => match.score < 99)
+                    .sort((left, right) => left.score - right.score || left.product.name.localeCompare(right.product.name))
+                    .slice(0, 8)
+                    .map(match => match.product);
+            };
+
+            const calculateTotal = row => {
+                const price = Number(row.querySelector(".delivery-price").value);
+                const quantity = Number(row.querySelector(".delivery-quantity").value);
+                const totalInput = row.querySelector(".delivery-total");
+
+                totalInput.value = price > 0 && quantity > 0
+                    ? currency.format(price * quantity)
+                    : "";
+            };
+
+            const selectProduct = (row, product) => {
+                row.querySelector(".delivery-product-id").value = product.code;
+                row.querySelector(".delivery-product-name").value = product.name;
+                row.querySelector(".product-error").textContent = "";
+
+                const priceInput = row.querySelector(".delivery-price");
+                const originalPriceInput = row.querySelector(".delivery-original-price");
+
+                if (product.price !== null && Number(product.price) > 0) {
+                    priceInput.value = Number(product.price).toString();
+                    originalPriceInput.value = Number(product.price).toString();
+                } else {
+                    priceInput.value = "";
+                    originalPriceInput.value = "";
+                }
+
+                row.querySelector(".product-suggestions").hidden = true;
+                calculateTotal(row);
+            };
+
+            const showSuggestions = row => {
+                const input = row.querySelector(".delivery-product-name");
+                const suggestions = row.querySelector(".product-suggestions");
+                const matches = rankProducts(input.value);
+                suggestions.replaceChildren();
+
+                matches.forEach(product => {
+                    const option = document.createElement("button");
+                    option.type = "button";
+                    option.className = "product-suggestion";
+                    option.setAttribute("role", "option");
+
+                    const name = document.createElement("strong");
+                    name.textContent = product.name;
+                    const detail = document.createElement("span");
+                    detail.textContent = `${product.code} · ${product.price !== null && Number(product.price) > 0 ? currency.format(Number(product.price)) : "No input"}`;
+                    option.append(name, detail);
+                    option.addEventListener("mousedown", event => {
+                        event.preventDefault();
+                        selectProduct(row, product);
+                        row.querySelector(".delivery-quantity").focus();
+                    });
+                    suggestions.appendChild(option);
+                });
+
+                suggestions.hidden = matches.length === 0;
+            };
+
+            const reindexRows = () => {
+                itemContainer.querySelectorAll(".delivery-item-row").forEach((row, index) => {
+                    row.dataset.index = index;
+                    row.querySelector(".delivery-item-number").textContent = `Item ${index + 1}`;
+                    row.querySelector(".delivery-product-id").name = `Delivery.Items[${index}].ItemId`;
+                    row.querySelector(".delivery-product-name").name = `Delivery.Items[${index}].ProductName`;
+                    row.querySelector(".delivery-quantity").name = `Delivery.Items[${index}].Quantity`;
+                    row.querySelector(".delivery-price").name = `Delivery.Items[${index}].UnitPrice`;
+                    row.querySelector(".delivery-original-price").name = `Delivery.Items[${index}].OriginalUnitPrice`;
+                    row.querySelector(".remove-delivery-item").disabled = itemContainer.children.length === 1;
+                });
+            };
+
+            const createItemRow = initialItem => {
+                const row = document.createElement("div");
+                row.className = "delivery-item-row";
+                row.innerHTML = `
+                    <div class="delivery-item-row-heading">
+                        <strong class="delivery-item-number"></strong>
+                        <button class="button button-danger-soft button-small remove-delivery-item" type="button">Remove</button>
+                    </div>
+                    <div class="delivery-item-grid">
+                        <div class="field product-picker">
+                            <label>Product name</label>
+                            <input class="delivery-product-id" type="hidden" />
+                            <input class="delivery-product-name" type="text" autocomplete="off" placeholder="Start typing a product name" required />
+                            <div class="product-suggestions" role="listbox" hidden></div>
+                            <span class="field-error product-error"></span>
+                        </div>
+                        <div class="field">
+                            <label>Price per item (editable)</label>
+                            <input class="delivery-original-price" type="hidden" />
+                            <div class="input-prefix">
+                                <span>₱</span>
+                                <input class="delivery-price" type="number" min="0.01" step="0.0001" placeholder="No input" />
+                            </div>
+                        </div>
+                        <div class="field">
+                            <label>Quantity</label>
+                            <input class="delivery-quantity" type="number" min="1" step="1" placeholder="0" required />
+                        </div>
+                        <div class="field">
+                            <label>Total</label>
+                            <input class="delivery-total" type="text" placeholder="No input" readonly tabindex="-1" />
+                        </div>
+                    </div>`;
+
+                const nameInput = row.querySelector(".delivery-product-name");
+                const idInput = row.querySelector(".delivery-product-id");
+                const quantityInput = row.querySelector(".delivery-quantity");
+                const priceInput = row.querySelector(".delivery-price");
+
+                nameInput.addEventListener("input", () => {
+                    const selected = productCatalog.find(product => product.code === idInput.value);
+                    if (!selected || selected.name !== nameInput.value) {
+                        idInput.value = "";
+                        priceInput.value = "";
+                        row.querySelector(".delivery-original-price").value = "";
+                        calculateTotal(row);
+                    }
+                    showSuggestions(row);
+                });
+                nameInput.addEventListener("focus", () => showSuggestions(row));
+                nameInput.addEventListener("blur", () => {
+                    window.setTimeout(() => row.querySelector(".product-suggestions").hidden = true, 120);
+                });
+                quantityInput.addEventListener("input", () => calculateTotal(row));
+                priceInput.addEventListener("input", () => calculateTotal(row));
+
+                row.querySelector(".remove-delivery-item").addEventListener("click", () => {
+                    if (itemContainer.children.length <= 1) return;
+                    row.remove();
+                    reindexRows();
+                });
+
+                itemContainer.appendChild(row);
+
+                if (initialItem) {
+                    nameInput.value = initialItem.productName || "";
+                    idInput.value = initialItem.itemId || "";
+                    quantityInput.value = initialItem.quantity ?? "";
+                    const product = productCatalog.find(candidate => candidate.code === initialItem.itemId);
+                    if (product) {
+                        selectProduct(row, product);
+                        priceInput.value = initialItem.unitPrice ?? "";
+                        row.querySelector(".delivery-original-price").value = initialItem.originalUnitPrice ?? "";
+                        calculateTotal(row);
+                    } else {
+                        idInput.value = "";
+                    }
+                }
+
+                reindexRows();
+                return row;
+            };
+
+            addItemButton.addEventListener("click", () => {
+                const row = createItemRow(null);
+                row.querySelector(".delivery-product-name").focus();
+            });
+
+            (initialItems.length > 0 ? initialItems : [null]).forEach(createItemRow);
+
+            form.addEventListener("submit", event => {
+                let firstInvalidInput = null;
+
+                itemContainer.querySelectorAll(".delivery-item-row").forEach(row => {
+                    const nameInput = row.querySelector(".delivery-product-name");
+                    const idInput = row.querySelector(".delivery-product-id");
+
+                    if (!idInput.value && nameInput.value.trim()) {
+                        const exactMatches = productCatalog.filter(product => normalise(product.name) === normalise(nameInput.value));
+                        if (exactMatches.length === 1) selectProduct(row, exactMatches[0]);
+                    }
+
+                    if (!idInput.value) {
+                        row.querySelector(".product-error").textContent = "Select a product from the suggestions.";
+                        firstInvalidInput ??= nameInput;
+                    }
+                });
+
+                if (firstInvalidInput) {
+                    event.preventDefault();
+                    firstInvalidInput.focus();
+                }
+            });
+
+            if (@Model.OpenDeliveryDialog.ToString().ToLowerInvariant()) dialog.showModal();
+        })();
+    </script>
+}
