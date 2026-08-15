@@ -15,8 +15,8 @@ namespace Kool_Ref_Inventory_System.Pages
         [BindProperty] public string Products { get; set; }
         [BindProperty] public int Quantities { get; set; }
 
-        string connectionString = "Server=db,1433;Database=Koolref;User Id=sa;Password=YourStrongPassword123!;TrustServerCertificate=True;";
-        //string connectionString = "Server=localhost\\SQLEXPRESS;Database=Koolref;Trusted_Connection=True;TrustServerCertificate=True;";
+        //string connectionString = "Server=db,1433;Database=Koolref;User Id=sa;Password=YourStrongPassword123!;TrustServerCertificate=True;";
+        string connectionString = "Server=localhost\\SQLEXPRESS;Database=Koolref;Trusted_Connection=True;TrustServerCertificate=True;";
         public List<Display> Index { get; set; } = new();
 
         public IActionResult OnGet()
@@ -25,22 +25,25 @@ namespace Kool_Ref_Inventory_System.Pages
             {
                 return RedirectToPage("/Login");
             }
+            
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
                 conn.Open();
                 string query = @"
-                SELECT 
-                    Item AS products,
-                    SUM(
-                        CASE 
-                            WHEN deliveryReceipt IS NOT NULL AND inVoice IS NULL THEN Quantity       -- add stock
-                            WHEN inVoice IS NOT NULL AND deliveryReceipt IS NULL THEN -Quantity      -- remove stock
-                            ELSE 0
-                        END
-                    ) AS Quantity
-                FROM Koolref.dbo.InandOutSystem
-                GROUP BY Item
-                ORDER BY Quantity ASC;";
+                SELECT
+                    il.name AS products,
+                    ISNULL(SUM(dpi.quantity), 0) AS Quantity
+                FROM Koolref.dbo.ItemList AS il
+
+                LEFT JOIN Koolref.dbo.DeliveryProcessedItem AS dpi
+                    ON il.itemId = dpi.itemId
+
+                GROUP BY
+                    il.itemId,
+                    il.name
+
+                ORDER BY
+                    Quantity ASC;";
 
                 using (SqlCommand cmd = new SqlCommand(query, conn))
                 {
@@ -52,13 +55,12 @@ namespace Kool_Ref_Inventory_System.Pages
                             Index.Add(new Display
                             {
                                 Products = reader["products"].ToString(),
-                                Quantities = Convert.ToInt32(reader["quantity"])
+                                Quantities = Convert.ToInt32(reader["Quantity"])
                             });
                         }
                     }
                 }
             }
-
             return Page();
         }
     }

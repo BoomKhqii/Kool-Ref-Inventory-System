@@ -14,17 +14,6 @@
     <link rel="stylesheet" href="~/Kool_Ref_Inventory_System.styles.css" asp-append-version="true" />
 </head>
 <body>
-<<<<<<< HEAD
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container">
-                <a class="navbar-brand" asp-area="" asp-page="/Service"><img src="~/css/logo_KoolRefrigerationEnterprisesInc2.png"></a>
-                <!--
-                    Need to change logo size and correct position & size for tabs
-                -->
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-=======
     <header class="app-header">
         <nav class="navbar navbar-expand-lg" aria-label="Main navigation">
             <div class="container-fluid app-container">
@@ -38,7 +27,6 @@
 
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#primaryNavigation"
                         aria-controls="primaryNavigation" aria-expanded="false" aria-label="Toggle navigation">
->>>>>>> fea250f (Change: Frontend changes)
                     <span class="navbar-toggler-icon"></span>
                 </button>
 
@@ -51,6 +39,10 @@
                         <li class="nav-item">
                             <a class="nav-link @(currentPage == "/Inventory" ? "active" : null)" asp-area="" asp-page="/Inventory"
                                aria-current="@(currentPage == "/Inventory" ? "page" : null)">Inventory ledger</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link @(currentPage == "/ItemSupply" ? "active" : null)" asp-area="" asp-page="/ItemSupply"
+                               aria-current="@(currentPage == "/ItemSupply" ? "page" : null)">Item supplies</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link @(currentPage == "/Service" ? "active" : null)" asp-area="" asp-page="/Service"
@@ -66,12 +58,6 @@
         </nav>
     </header>
 
-<<<<<<< HEAD
-    <!--
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2025 - Kool_Ref_Inventory_System - <a asp-area="" asp-page="/Privacy">Privacy</a>
-=======
     <main class="app-main app-container" id="main-content">
         @RenderBody()
     </main>
@@ -80,10 +66,8 @@
         <div class="app-container footer-content">
             <span>&copy; @DateTime.Now.Year Kool Refrigeration Enterprises Inc.</span>
             <a asp-area="" asp-page="/Privacy">Privacy</a>
->>>>>>> fea250f (Change: Frontend changes)
         </div>
     </footer>
-    -->
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>

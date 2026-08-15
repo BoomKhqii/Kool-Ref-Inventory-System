@@ -185,11 +185,10 @@
             <thead>
                 <tr>
                     <th scope="col">Technicians</th>
-                    <th scope="col">Service details</th>
-                    <th scope="col">Customer</th>
-                    <th scope="col">Reference</th>
-                    <th scope="col">Inventory item</th>
-                    <th scope="col">Movement details</th>
+                    <th scope="col">Scope of Work</th>
+                    <th scope="col">Details</th>
+                    <th scope="col">Client</th>
+                    <th scope="col">Service Receipt</th>
                 </tr>
             </thead>
             <tbody>
@@ -206,30 +205,33 @@
                         <tr>
                             <td>
                                 <div class="technician-stack">
-                                    @foreach (var tech in row.Technicians)
+                                    <span class="table-detail">@row.ServiceReport.technician</span>
+                                    @* @foreach (var tech in row.Technicians)
                                     {
                                         <span>@tech</span>
+                                    } *@
+                                </div>
+                            </td>
+                            <td>
+
+                                <div class="technician-stack">
+                                    @foreach (var sow in row.ScopesOfWork)
+                                    {
+                                        <span>@sow</span>
                                     }
                                 </div>
                             </td>
                             <td>
-                                <strong class="item-name">@row.ServiceReport.WorkScope</strong>
-                                <span class="table-detail">@row.ServiceReport.DateStarted — @row.ServiceReport.DateEnded</span>
-                                <span class="table-detail">@row.ServiceReport.TimeIn — @row.ServiceReport.TimeOut</span>
+                                <span class="table-detail">@row.ServiceReport.dateStarted—@row.ServiceReport.dateEnded</span>
+                                <span class="table-detail">@row.ServiceReport.timeIn—@row.ServiceReport.timeOut</span>
+
                             </td>
                             <td>
-                                <strong class="item-name">@row.ServiceReport.Customer</strong>
-                                <span class="table-detail">@row.ServiceReport.Address</span>
-                            </td>
-                            <td><span class="reference-code">@row.ServiceReport.IUD</span></td>
-                            <td>
-                                <strong class="item-name">@row.Inventory.Item</strong>
-                                <span class="table-detail">@row.Inventory.Description</span>
+                                <strong class="item-name">@row.ServiceReport.client_name</strong>
+                                <span class="table-detail">@row.ServiceReport.client_location</span>
                             </td>
                             <td>
-                                <strong>@row.Inventory.Quantity.ToString("N0") × @row.Inventory.Price.ToString("C", CultureInfo.GetCultureInfo("en-PH"))</strong>
-                                <span class="table-detail">@row.Inventory.Supplier · @row.Inventory.DateInv</span>
-                                <span class="table-detail">@row.Inventory.Location</span>
+                                <span class="reference-code">@row.ServiceReport.serviceReceipt</span>
                             </td>
                         </tr>
                     }

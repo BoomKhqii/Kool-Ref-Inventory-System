@@ -13,18 +13,16 @@ namespace Kool_Ref_Inventory_System.Pages
         [BindProperty] public string Username { get; set; }
         [BindProperty] public string Password { get; set; }
 
-        //string connectionString = "Server=localhost\\SQLEXPRESS;Database=Koolref;Trusted_Connection=True;TrustServerCertificate=True;";
-        string connectionString = "Server=db,1433;Database=Koolref;User Id=sa;Password=YourStrongPassword123!;TrustServerCertificate=True;";
+        string connectionString = "Server=localhost\\SQLEXPRESS;Database=Koolref;Trusted_Connection=True;TrustServerCertificate=True;";
+        //string connectionString = "Server=db,1433;Database=Koolref;User Id=sa;Password=YourStrongPassword123!;TrustServerCertificate=True;";
 
         /*
-         * Login Test
-  
         public IActionResult OnPost()
         {
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
                 conn.Open();
-                string detailsQuery = "INSERT INTO Koolref.dbo.UserDetails (Username, Password) VALUES (@username, @password)";
+                string detailsQuery = "INSERT INTO Koolref.dbo.[User] (userId, name, password) VALUES (26002, @username, @password)";
 
                 using (SqlCommand cmd = new SqlCommand(detailsQuery, conn))
                 {
@@ -37,14 +35,14 @@ namespace Kool_Ref_Inventory_System.Pages
             return RedirectToPage("/Login");
         }
         */
-
+       
         public IActionResult OnPost()
         {
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
                 conn.Open();
 
-                string query = "SELECT Password FROM Koolref.dbo.UserDetails WHERE Username = @username";
+                string query = "SELECT password FROM Koolref.dbo.[User] WHERE name = @username";
 
                 using (SqlCommand cmd = new SqlCommand(query, conn))
                 {
@@ -60,6 +58,9 @@ namespace Kool_Ref_Inventory_System.Pages
 
                     string storedHash = result.ToString();
 
+                    cmd.Parameters.AddWithValue("@password", HashBCrypt(Password));
+                    cmd.ExecuteNonQuery();
+
                     bool passwordCorrect = BCrypt.Net.BCrypt.Verify(Password, storedHash);
 
                     if (!passwordCorrect)
@@ -72,7 +73,7 @@ namespace Kool_Ref_Inventory_System.Pages
                 }
             }
 
-            return RedirectToPage("/Service");
+            return RedirectToPage("/Inventory");
         }
 
         public string HashBCrypt(string data) { return BCrypt.Net.BCrypt.HashPassword(data); }

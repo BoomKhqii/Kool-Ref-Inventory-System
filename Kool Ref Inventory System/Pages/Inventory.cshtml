@@ -4,7 +4,7 @@
 @{
     ViewData["Title"] = "Inventory ledger";
     var recordCount = Model.Inventory?.Count ?? 0;
-    var unitsProcessed = Model.Inventory?.Sum(item => item.Quantity) ?? 0;
+    var unitsProcessed = Model.Inventory?.Sum(item => item.itemQuantity) ?? 0;
 }
 
 <section class="page-heading">
@@ -34,14 +34,13 @@
         <table class="data-table data-table-wide">
             <thead>
                 <tr>
-                    <th scope="col">Item</th>
-                    <th scope="col">Description</th>
-                    <th scope="col">Supplier</th>
+                    <th scope="col">Delivery Receipt</th>
                     <th scope="col">Date</th>
+                    <th scop="col">Location</th>
+                    <th scope="col">Item name</th>
+                    <th scope="col">Price per</th>
                     <th scope="col">Quantity</th>
-                    <th scope="col">Unit price</th>
-                    <th scope="col">Location</th>
-                    <th scope="col">Reference</th>
+                    <th scope="col">Total price</th>
                 </tr>
             </thead>
             <tbody>
@@ -56,14 +55,14 @@
                     @foreach (var item in Model.Inventory)
                     {
                         <tr>
-                            <td><strong class="item-name">@item.Item</strong></td>
-                            <td class="description-cell">@item.Description</td>
-                            <td>@item.Supplier</td>
-                            <td class="no-wrap">@(item.DateInv ?? "—")</td>
-                            <td><span class="quantity-chip">@item.Quantity.ToString("N0")</span></td>
-                            <td class="no-wrap">@item.Price.ToString("C", CultureInfo.GetCultureInfo("en-PH"))</td>
-                            <td>@item.Location</td>
-                            <td><span class="reference-code">@item.IUD</span></td>
+                            <td><span class="reference-code">@item.deliveryReceipt</span></td>
+                            <td class="no-wrap">@(item.delivery_date ?? "—")</td>
+                            <td class="description-cell">@item.delivery_location</td>
+                            <td><strong class="item-name">@item.itemName</strong></td>
+                            <td class="no-wrap">@item.itemPricePerX.ToString("C", CultureInfo.GetCultureInfo("en-PH"))</td>
+                            <td><span class="quantity-chip">@item.itemQuantity.ToString("N0")</span></td>
+                            <td>@item.itemTotal</td>
+                            
                         </tr>
                     }
                 }

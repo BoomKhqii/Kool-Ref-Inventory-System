@@ -29,11 +29,12 @@ namespace Kool_Ref_Inventory_System.Pages
         {
             public Service ServiceReport { get; set; }
             public List<string> Technicians { get; set; }
+            public List<string> ScopesOfWork { get; set; }
             public Items Inventory { get; set; }
         }
         public List<CombinedViewModel> Records { get; set; }
-        //string connectionString = "Server=localhost\\SQLEXPRESS;Database=Koolref;Trusted_Connection=True;TrustServerCertificate=True;";
-        string connectionString = "Server=db,1433;Database=Koolref;User Id=sa;Password=YourStrongPassword123!;TrustServerCertificate=True;";
+        string connectionString = "Server=localhost\\SQLEXPRESS;Database=Koolref;Trusted_Connection=True;TrustServerCertificate=True;";
+        //string connectionString = "Server=db,1433;Database=Koolref;User Id=sa;Password=YourStrongPassword123!;TrustServerCertificate=True;";
 
         public IActionResult OnPost()
         {
@@ -138,13 +139,176 @@ namespace Kool_Ref_Inventory_System.Pages
                 //string query = "SELECT * FROM dbo.InandOutSystem";
                 //string query = "SELECT * FROM dbo.ServiceReport JOIN dbo.TechnicianListOrders ON dbo.ServiceReport.JobOrder=dbo.TechnicianListOrders.JobOrder JOIN dbo.InandOutSystem ON dbo.ServiceReport.InVoice=dbo.InandOutSystem.inVoice";
                 string query = @"
-                    SELECT * FROM dbo.ServiceReport 
-                    JOIN dbo.TechnicianListOrders 
-                        ON dbo.ServiceReport.JobOrder = dbo.TechnicianListOrders.JobOrder 
-                    JOIN dbo.InandOutSystem 
-                        ON (dbo.ServiceReport.InVoice = dbo.InandOutSystem.inVoice 
-                            OR dbo.ServiceReport.DeliveryReceipt = dbo.InandOutSystem.deliveryReceipt)
-                    ORDER BY Koolref.dbo.ServiceReport.JobOrder DESC;";
+                    DECLARE @cols nvarchar(MAX);
+                    DECLARE @sql  nvarchar(MAX);
+
+                    WITH NumberedScopes AS
+                    (
+                        SELECT
+                            serviceReceipt,
+                            scopeOfWork,
+                            ROW_NUMBER() OVER (
+                                PARTITION BY serviceReceipt
+                                ORDER BY scopeOfWork
+                            ) AS rn
+                        FROM [Koolref].[dbo].[ServiceScopeOfWork]
+                    )
+                    SELECT @cols = STRING_AGG(
+                        QUOTENAME('Scope of Work #' + CAST(rn AS varchar(10))),
+                        ','
+                    )
+                    FROM
+                    (
+                        SELECT DISTINCT rn
+                        FROM NumberedScopes
+                    ) x;
+
+
+                    SET @sql = '
+                    WITH NumberedScopes AS
+                    (
+                        SELECT
+                            serviceReceipt,
+                            scopeOfWork,
+                            ''Scope of Work #'' + CAST(
+                                ROW_NUMBER() OVER (
+                                    PARTITION BY serviceReceipt
+                                    ORDER BY scopeOfWork
+                                ) AS varchar(10)
+                            ) AS scopeColumn
+                        FROM [Koolref].[dbo].[ServiceScopeOfWork]
+                    ),
+
+                    Techs AS
+                    (
+                        SELECT
+                            serviceReceipt,
+                            STRING_AGG(technician, '', '') AS technicians
+                        FROM dbo.ServiceTechnician
+                        GROUP BY serviceReceipt
+                    )
+
+                    SELECT
+                        sr.serviceReceipt,
+                        sr.timeIn,
+                        sr.timeOut,
+                        sr.dateStarted,
+                        sr.dateEnded,
+
+                        c.name AS clientName,
+                        c.address AS clientAddress,\
+
+                        t.technicians,
+                        ' + @cols + '
+
+                    FROM dbo.ServiceReport sr
+
+                    LEFT JOIN dbo.Client c
+                        ON sr.clientId = c.clientId
+
+                    LEFT JOIN Techs t
+                        ON sr.serviceReceipt = t.serviceReceipt
+
+                    LEFT JOIN
+                    (
+                        SELECT *
+                        FROM NumberedScopes
+                        PIVOT
+                        (
+                            MAX(scopeOfWork)
+                            FOR scopeColumn IN (' + @cols + ')
+                        ) p
+                    ) s
+                        ON sr.serviceReceipt = s.serviceReceipt
+
+                    ORDER BY sr.serviceReceipt DESC;
+                    ';
+
+                    EXEC sp_executesql @sql;";
+                    
+                    /*
+                    @"
+                    DECLARE @cols nvarchar(MAX);
+                    DECLARE @sql  nvarchar(MAX);
+
+                    WITH NumberedScopes AS
+                    (
+                        SELECT
+                            serviceReceipt,
+                            scopeOfWork,
+                            ROW_NUMBER() OVER (
+                                PARTITION BY serviceReceipt
+                                ORDER BY scopeOfWork
+                            ) AS rn
+                        FROM [Koolref].[dbo].[ServiceScopeOfWork]
+                    )
+                    SELECT @cols = STRING_AGG(
+                        QUOTENAME('Scope of Work #' + CAST(rn AS varchar(10))),
+                        ','
+                    )
+                    FROM
+                    (
+                        SELECT DISTINCT rn
+                        FROM NumberedScopes
+                    ) x;
+
+
+                    SET @sql = '
+                    WITH NumberedScopes AS
+                    (
+                        SELECT
+                            serviceReceipt,
+                            scopeOfWork,
+                            ''Scope of Work #'' + CAST(
+                                ROW_NUMBER() OVER (
+                                    PARTITION BY serviceReceipt
+                                    ORDER BY scopeOfWork
+                                ) AS varchar(10)
+                            ) AS scopeColumn
+                        FROM [Koolref].[dbo].[ServiceScopeOfWork]
+                    ),
+
+                    Techs AS
+                    (
+                        SELECT
+                            serviceReceipt,
+                            STRING_AGG(technician, '', '') AS technicians
+                        FROM dbo.ServiceTechnician
+                        GROUP BY serviceReceipt
+                    )
+
+                    SELECT
+                        sr.serviceReceipt,
+                        sr.timeIn,
+                        sr.timeOut,
+                        sr.dateStarted,
+                        sr.dateEnded,
+                        sr.clientId,
+                        t.technicians,
+                        ' + @cols + '
+
+                    FROM dbo.ServiceReport sr
+
+                    LEFT JOIN Techs t
+                        ON sr.serviceReceipt = t.serviceReceipt
+
+                    LEFT JOIN
+                    (
+                        SELECT *
+                        FROM NumberedScopes
+                        PIVOT
+                        (
+                            MAX(scopeOfWork)
+                            FOR scopeColumn IN (' + @cols + ')
+                        ) p
+                    ) s
+                        ON sr.serviceReceipt = s.serviceReceipt
+
+                    ORDER BY sr.serviceReceipt DESC;
+                    ';
+
+                    EXEC sp_executesql @sql;";
+                */
 
                 using (SqlCommand cmd = new SqlCommand(query, conn))
                 {
@@ -154,16 +318,22 @@ namespace Kool_Ref_Inventory_System.Pages
 
                         while (reader.Read())
                         {
-                            var technicians = new List<string>();
+                            var sow = new List<string>();
 
-                            for (int i = 0; i <= 9; i++)
+                            for (int columnIndex = 0; columnIndex < reader.FieldCount; columnIndex++)
                             {
-                                string columnName = "Technicians" + i;
-                                if (reader[columnName] != DBNull.Value)
+                                string columnName = reader.GetName(columnIndex);
+
+                                if (!columnName.StartsWith("Scope of Work #", StringComparison.OrdinalIgnoreCase)
+                                    || reader.IsDBNull(columnIndex))
                                 {
-                                    string value = reader[columnName].ToString();
-                                    if (!string.IsNullOrWhiteSpace(value))
-                                        technicians.Add(value);
+                                    continue;
+                                }
+
+                                string value = reader.GetValue(columnIndex).ToString() ?? "";
+                                if (!string.IsNullOrWhiteSpace(value))
+                                {
+                                    sow.Add(value);
                                 }
                             }
 
@@ -171,34 +341,35 @@ namespace Kool_Ref_Inventory_System.Pages
                             {
                                 ServiceReport = new Service
                                 {
-                                    WorkScope = reader["WorkScope"]?.ToString() ?? "",
-                                    TimeIn = reader["TimeIn"]?.ToString() ?? "",
-                                    TimeOut = reader["TimeOut"]?.ToString() ?? "",
-                                    DateStarted = reader["DateStarted"] != DBNull.Value
-                                        ? Convert.ToDateTime(reader["DateStarted"]).ToString("yyyy-MM-dd")
+                                    timeIn = reader["timeIn"]?.ToString() ?? "",
+                                    timeOut = reader["timeOut"]?.ToString() ?? "",
+                                    dateStarted = reader["dateStarted"] != DBNull.Value
+                                        ? Convert.ToDateTime(reader["dateStarted"]).ToString("yyyy-MM-dd")
                                         : "",
-                                    DateEnded = reader["DateEnded"] != DBNull.Value
-                                        ? Convert.ToDateTime(reader["DateEnded"]).ToString("yyyy-MM-dd")
+                                    dateEnded = reader["dateEnded"] != DBNull.Value
+                                        ? Convert.ToDateTime(reader["dateEnded"]).ToString("yyyy-MM-dd")
                                         : "",
-                                    Customer = reader["Customer"]?.ToString() ?? "",
-                                    Address = reader["Adddress"]?.ToString() ?? "",
-                                    IUD = (reader["DeliveryReceipt"] as int?) ?? (reader["InVoice"] as int?) ?? 0
+                                    client_name = reader["clientName"]?.ToString() ?? "",
+                                    client_location = reader["clientAddress"]?.ToString() ?? "",
+                                    //client_id = Convert.ToInt32(reader["clientId"]),
+                                    //address = reader["location"]?.ToString() ?? "",
+                                    serviceReceipt = Convert.ToInt32(reader["serviceReceipt"]),
+                                    technician = reader["technicians"]?.ToString() ?? ""
                                 },
 
-                                Technicians = technicians,
-
+                                ScopesOfWork = sow,
+                                /*
                                 Inventory = new Items
                                 {
-                                    Item = reader["Item"].ToString(),
-                                    Description = reader["Description"].ToString(),
-                                    Supplier = reader["Supplier"].ToString(),
-                                    DateInv = reader["Date"] == DBNull.Value ? null :
+                                    itemName = reader["Item"].ToString(),
+                                    delivery_date = reader["Date"] == DBNull.Value ? null :
                                         Convert.ToDateTime(reader["Date"]).ToString("yyyy-MM-dd"),
-                                    Quantity = Convert.ToInt32(reader["Quantity"]),
-                                    Price = Convert.ToDecimal(reader["Price"]),
-                                    Location = reader["Location"].ToString(),
-                                    IUD = (reader["DeliveryReceipt"] as int?) ?? (reader["InVoice"] as int?) ?? 0
+                                    itemQuantity = Convert.ToInt32(reader["Quantity"]),
+                                    itemPricePerX = Convert.ToDecimal(reader["Price"]),
+                                    delivery_location = reader["Location"].ToString(),
+                                    deliveryReceipt = Convert.ToInt32(reader["deliveryReceipt"])
                                 }
+                                */
                             });
                         }
                     }
@@ -210,13 +381,14 @@ namespace Kool_Ref_Inventory_System.Pages
     }
     public class Service
     {
-        public string WorkScope { get; set; }
-        public string TimeIn { get; set; }
-        public string TimeOut { get; set; }
-        public string DateStarted { get; set; }
-        public string DateEnded { get; set; }
-        public string Customer { get; set; }
-        public string Address { get; set; }
-        public int IUD { get; set; }
+        public int serviceReceipt { get; set; }
+        public string timeIn { get; set; }
+        public string timeOut { get; set; }
+        public string dateStarted { get; set; }
+        public string dateEnded { get; set; }
+        public string client_location { get; set; }
+        public string client_name { get; set; }
+        public string address { get; set; }
+        public string technician { get; set; }
     }
 }
