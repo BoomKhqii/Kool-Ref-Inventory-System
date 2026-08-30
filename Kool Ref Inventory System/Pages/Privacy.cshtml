@@ -1,35 +1,37 @@
-﻿@page
+@page
 @model PrivacyModel
 @{
-    ViewData["Title"] = "Privacy Policy";
+    ViewData["Title"] = "Privacy";
 }
-<h1>@ViewData["Title"]</h1>
 
-<table class="inventory-table">
-    <thead>
-        <tr>
-            <th>Item</th>
-            <th>Description</th>
-            <th>Supplier</th>
-            <th>Date of Purchase</th>
-            <th>Quantity</th>
-            <th>Price</th>
-            <th>Reference Number</th>
-            <th>In/Out</th>
-            <th>Status</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>CNF-223i</td>
-            <td>8 cu.ft. no-frost inverter</td>
-            <td>Condura</td>
-            <td>01/15/2023</td>
-            <td>10</td>
-            <td>$3,066.18</td>
-            <td>REF123456</td>
-            <td>Out</td>
-            <td>SMDC Light Mall</td>
-        </tr>
-    </tbody>
-</table>
+<section class="page-heading page-heading-narrow">
+    <div>
+        <p class="eyebrow">System information</p>
+        <h1>Privacy and data use</h1>
+        <p class="page-lead">How operational information should be handled within the inventory system.</p>
+    </div>
+</section>
+
+<section class="content-card privacy-content">
+    <div class="content-section">
+        <span class="content-number">01</span>
+        <div>
+            <h2>Operational data</h2>
+            <p>This system stores inventory movements, service details, customer information and technician names for business operations.</p>
+        </div>
+    </div>
+    <div class="content-section">
+        <span class="content-number">02</span>
+        <div>
+            <h2>Responsible access</h2>
+            <p>Access should be limited to authorised team members. Information displayed here should not be shared outside the organisation without approval.</p>
+        </div>
+    </div>
+    <div class="content-section">
+        <span class="content-number">03</span>
+        <div>
+            <h2>Questions or corrections</h2>
+            <p>Contact the system administrator when a record needs to be corrected or when access should be reviewed.</p>
+        </div>
+    </div>
+</section>

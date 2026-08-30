@@ -1,10 +1,86 @@
-﻿@page
+@page
 @model IndexModel
 @{
-    ViewData["Title"] = "Home page";
+    ViewData["Title"] = "Stock overview";
+    var productCount = Model.Index.Count;
+    var lowStockCount = Model.Index.Count(item => item.Quantities <= 5);
+    var totalUnits = Model.Index.Sum(item => item.Quantities);
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+<section class="page-heading">
+    <div>
+        <p class="eyebrow">Inventory control</p>
+        <h1>Stock overview</h1>
+        <p class="page-lead">Monitor current quantities and quickly identify items that need attention.</p>
+    </div>
+    <a class="button button-secondary" asp-page="/Inventory">View inventory ledger</a>
+</section>
+
+<section class="metric-grid" aria-label="Stock summary">
+    <article class="metric-card metric-card-primary">
+        <span class="metric-label">Tracked products</span>
+        <strong class="metric-value">@productCount</strong>
+        <span class="metric-helper">Unique items in stock</span>
+    </article>
+    <article class="metric-card metric-card-danger">
+        <span class="metric-label">Low stock</span>
+        <strong class="metric-value">@lowStockCount</strong>
+        <span class="metric-helper">Five units or fewer</span>
+    </article>
+    <article class="metric-card metric-card-success">
+        <span class="metric-label">Net units</span>
+        <strong class="metric-value">@totalUnits.ToString("N0")</strong>
+        <span class="metric-helper">Across all tracked products</span>
+    </article>
+</section>
+
+<section class="surface-card">
+    <div class="surface-header">
+        <div>
+            <p class="section-kicker">Live quantities</p>
+            <h2>Stock levels</h2>
+        </div>
+        <div class="status-legend" aria-label="Stock status legend">
+            <span><i class="legend-dot legend-critical"></i>Low</span>
+            <span><i class="legend-dot legend-watch"></i>Watch</span>
+            <span><i class="legend-dot legend-healthy"></i>Healthy</span>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th scope="col">Item name</th>
+                    <th scope="col">Available units</th>
+                    <th scope="col">Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Index.Count == 0)
+                {
+                    <tr>
+                        <td colspan="3" class="empty-state">No stock records are available yet.</td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (var display in Model.Index)
+                    {
+                        var statusClass = display.Quantities <= 5 ? "status-critical" : display.Quantities <= 15 ? "status-watch" : "status-healthy";
+                        var statusText = display.Quantities <= 5 ? "Low stock" : display.Quantities <= 15 ? "Monitor" : "Healthy";
+                        <tr>
+                            <td><strong class="item-name">@display.Products</strong></td>
+                            <td><span class="quantity-value">@display.Quantities.ToString("N0")</span></td>
+                            <td>
+                                <span class="status-pill @statusClass">
+                                    <span class="status-dot" aria-hidden="true"></span>@statusText
+                                </span>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</section>

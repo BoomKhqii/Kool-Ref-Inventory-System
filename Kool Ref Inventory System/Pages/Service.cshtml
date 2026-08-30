@@ -1,0 +1,290 @@
+@page
+@model Kool_Ref_Inventory_System.Pages.ServiceModel
+@using System.Globalization
+@{
+    ViewData["Title"] = "Service reports";
+    var reportCount = Model.Records?.Count ?? 0;
+}
+
+<section class="page-heading">
+    <div>
+        <p class="eyebrow">Field operations</p>
+        <h1>Service reports</h1>
+        <p class="page-lead">Record completed service work and review the inventory movements connected to each job.</p>
+    </div>
+    <button class="button button-primary" id="reportAdd" type="button">
+        <span aria-hidden="true">＋</span> New service report
+    </button>
+</section>
+
+<section class="compact-metrics" aria-label="Service summary">
+    <div><span>Service reports</span><strong>@reportCount.ToString("N0")</strong></div>
+</section>
+
+<dialog class="report-dialog" id="reportWindow" aria-labelledby="reportDialogTitle">
+    <form method="post" asp-page="Service" class="report-form">
+        <div class="dialog-header">
+            <div>
+                <p class="section-kicker">New entry</p>
+                <h2 id="reportDialogTitle">Service and inventory report</h2>
+                <p>Complete the job details and related inventory movement.</p>
+            </div>
+            <button class="dialog-close" id="reportClose" type="button" aria-label="Close report form">×</button>
+        </div>
+
+        <div class="dialog-body">
+            <section class="form-section" aria-labelledby="serviceDetailsHeading">
+                <div class="form-section-heading">
+                    <span>01</span>
+                    <div>
+                        <h3 id="serviceDetailsHeading">Service details</h3>
+                        <p>Describe the work, schedule and customer.</p>
+                    </div>
+                </div>
+
+                <div class="form-grid">
+                    <div class="field field-span-2">
+                        <label asp-for="WorkScope">Work scope</label>
+                        <textarea asp-for="WorkScope" rows="3" placeholder="Describe the work completed" required></textarea>
+                    </div>
+                    <div class="field">
+                        <label asp-for="TimeIn">Time in</label>
+                        <input type="time" asp-for="TimeIn" required />
+                    </div>
+                    <div class="field">
+                        <label asp-for="TimeOut">Time out</label>
+                        <input type="time" asp-for="TimeOut" required />
+                    </div>
+                    <div class="field">
+                        <label asp-for="DateStarted">Date started</label>
+                        <input type="date" asp-for="DateStarted" required />
+                    </div>
+                    <div class="field">
+                        <label asp-for="DateEnded">Date ended</label>
+                        <input type="date" asp-for="DateEnded" required />
+                    </div>
+                    <div class="field">
+                        <label asp-for="Customer">Customer name</label>
+                        <input type="text" asp-for="Customer" placeholder="Customer or company" autocomplete="organization" required />
+                    </div>
+                    <div class="field">
+                        <label asp-for="Address">Service address</label>
+                        <input type="text" asp-for="Address" placeholder="Street, city or site" autocomplete="street-address" required />
+                    </div>
+                </div>
+            </section>
+
+            <section class="form-section" aria-labelledby="techniciansHeading">
+                <div class="form-section-heading">
+                    <span>02</span>
+                    <div>
+                        <h3 id="techniciansHeading">Technicians</h3>
+                        <p>Add up to ten technicians assigned to this job.</p>
+                    </div>
+                </div>
+
+                <div id="technician-list" class="technician-list">
+                    <div class="technician-row">
+                        <div class="field">
+                            <label for="Technician_0_">Technician 1</label>
+                            <input type="text" id="Technician_0_" name="Technician[0]" placeholder="Full name" required />
+                        </div>
+                    </div>
+                </div>
+                <div class="form-inline-actions">
+                    <button type="button" class="button button-secondary button-small" id="addTechnician">＋ Add technician</button>
+                    <button type="button" class="button button-danger-soft button-small" id="removeTechnician">Remove last</button>
+                </div>
+            </section>
+
+            <section class="form-section" aria-labelledby="inventoryDetailsHeading">
+                <div class="form-section-heading">
+                    <span>03</span>
+                    <div>
+                        <h3 id="inventoryDetailsHeading">Inventory movement</h3>
+                        <p>Record the item associated with this service report.</p>
+                    </div>
+                </div>
+
+                <div class="form-grid">
+                    <div class="field">
+                        <label asp-for="Item">Item name</label>
+                        <input type="text" asp-for="Item" placeholder="Product or part name" required />
+                    </div>
+                    <div class="field">
+                        <label asp-for="Supplier">Supplier</label>
+                        <input type="text" asp-for="Supplier" placeholder="Supplier name" required />
+                    </div>
+                    <div class="field field-span-2">
+                        <label asp-for="Description">Description</label>
+                        <textarea asp-for="Description" rows="2" placeholder="Item details or specification" required></textarea>
+                    </div>
+                    <div class="field">
+                        <label asp-for="Date">Movement date</label>
+                        <input type="date" asp-for="Date" required />
+                    </div>
+                    <div class="field">
+                        <label asp-for="Location">Location</label>
+                        <input type="text" asp-for="Location" placeholder="Storage or job site" required />
+                    </div>
+                    <div class="field">
+                        <label asp-for="Quantity">Quantity</label>
+                        <input type="number" asp-for="Quantity" min="1" step="1" placeholder="0" required />
+                    </div>
+                    <div class="field">
+                        <label asp-for="Price">Unit price</label>
+                        <div class="input-prefix">
+                            <span>₱</span>
+                            <input type="number" asp-for="Price" min="0" step="0.01" placeholder="0.00" required />
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="form-section" aria-labelledby="referenceDetailsHeading">
+                <div class="form-section-heading">
+                    <span>04</span>
+                    <div>
+                        <h3 id="referenceDetailsHeading">Document reference</h3>
+                        <p>Enter either a delivery receipt or invoice number.</p>
+                    </div>
+                </div>
+
+                <div class="form-grid">
+                    <div class="field">
+                        <label asp-for="DeliveryReceipt">Delivery receipt</label>
+                        <input type="number" asp-for="DeliveryReceipt" min="0" placeholder="Receipt number" />
+                    </div>
+                    <div class="field">
+                        <label asp-for="InVoice">Invoice</label>
+                        <input type="number" asp-for="InVoice" min="0" placeholder="Invoice number" />
+                    </div>
+                </div>
+                <p class="form-hint">Delivery receipts add stock. Invoices remove stock.</p>
+            </section>
+        </div>
+
+        <div class="dialog-footer">
+            <button type="button" class="button button-ghost" id="reportCancel">Cancel</button>
+            <button type="submit" class="button button-primary">Save report</button>
+        </div>
+    </form>
+</dialog>
+
+<section class="surface-card">
+    <div class="surface-header">
+        <div>
+            <p class="section-kicker">Completed work</p>
+            <h2>Service report history</h2>
+        </div>
+        <span class="record-count">@reportCount @(reportCount == 1 ? "report" : "reports")</span>
+    </div>
+
+    <div class="table-responsive">
+        <table class="data-table service-table">
+            <thead>
+                <tr>
+                    <th scope="col">Technicians</th>
+                    <th scope="col">Scope of Work</th>
+                    <th scope="col">Details</th>
+                    <th scope="col">Client</th>
+                    <th scope="col">Service Receipt</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Records == null || Model.Records.Count == 0)
+                {
+                    <tr>
+                        <td colspan="6" class="empty-state">No service reports are available yet.</td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (var row in Model.Records)
+                    {
+                        <tr>
+                            <td>
+                                <div class="technician-stack">
+                                    <span class="table-detail">@row.ServiceReport.technician</span>
+                                    @* @foreach (var tech in row.Technicians)
+                                    {
+                                        <span>@tech</span>
+                                    } *@
+                                </div>
+                            </td>
+                            <td>
+
+                                <div class="technician-stack">
+                                    @foreach (var sow in row.ScopesOfWork)
+                                    {
+                                        <span>@sow</span>
+                                    }
+                                </div>
+                            </td>
+                            <td>
+                                <span class="table-detail">@row.ServiceReport.dateStarted—@row.ServiceReport.dateEnded</span>
+                                <span class="table-detail">@row.ServiceReport.timeIn—@row.ServiceReport.timeOut</span>
+
+                            </td>
+                            <td>
+                                <strong class="item-name">@row.ServiceReport.client_name</strong>
+                                <span class="table-detail">@row.ServiceReport.client_location</span>
+                            </td>
+                            <td>
+                                <span class="reference-code">@row.ServiceReport.serviceReceipt</span>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        (() => {
+            const dialog = document.getElementById("reportWindow");
+            const openButton = document.getElementById("reportAdd");
+            const closeButton = document.getElementById("reportClose");
+            const cancelButton = document.getElementById("reportCancel");
+            const addButton = document.getElementById("addTechnician");
+            const removeButton = document.getElementById("removeTechnician");
+            const container = document.getElementById("technician-list");
+            let technicianIndex = 1;
+
+            const closeDialog = () => dialog.close();
+
+            openButton.addEventListener("click", () => dialog.showModal());
+            closeButton.addEventListener("click", closeDialog);
+            cancelButton.addEventListener("click", closeDialog);
+
+            dialog.addEventListener("click", event => {
+                if (event.target === dialog) closeDialog();
+            });
+
+            addButton.addEventListener("click", () => {
+                if (technicianIndex >= 10) return;
+
+                const row = document.createElement("div");
+                row.className = "technician-row";
+                row.innerHTML = `
+                    <div class="field">
+                        <label for="Technician_${technicianIndex}_">Technician ${technicianIndex + 1}</label>
+                        <input type="text" id="Technician_${technicianIndex}_" name="Technician[${technicianIndex}]" placeholder="Full name" required />
+                    </div>`;
+                container.appendChild(row);
+                technicianIndex++;
+                row.querySelector("input").focus();
+            });
+
+            removeButton.addEventListener("click", () => {
+                const rows = container.querySelectorAll(".technician-row");
+                if (rows.length <= 1) return;
+
+                rows[rows.length - 1].remove();
+                technicianIndex--;
+            });
+        })();
+    </script>
+}
