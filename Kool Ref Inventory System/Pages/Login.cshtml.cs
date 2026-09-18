@@ -1,81 +1,66 @@
-using BCrypt.Net;
+using System.ComponentModel.DataAnnotations;
+using System.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Data.SqlClient;
-using System.Net;
-using System.Timers;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
-namespace Kool_Ref_Inventory_System.Pages
+namespace Kool_Ref_Inventory_System.Pages;
+
+public class LoginModel : PageModel
 {
-    public class LoginModel : PageModel
+    private readonly string _connectionString;
+
+    public LoginModel(IConfiguration configuration)
     {
-        [BindProperty] public string Username { get; set; }
-        [BindProperty] public string Password { get; set; }
+        _connectionString = configuration.GetConnectionString("DefaultConnection")
+            ?? throw new InvalidOperationException("The DefaultConnection connection string is not configured.");
+    }
 
-        string connectionString = "Server=localhost\\SQLEXPRESS;Database=Koolref;Trusted_Connection=True;TrustServerCertificate=True;";
-        //string connectionString = "Server=db,1433;Database=Koolref;User Id=sa;Password=YourStrongPassword123!;TrustServerCertificate=True;";
+    [BindProperty, Required] public string Username { get; set; } = "";
+    [BindProperty, Required] public string Password { get; set; } = "";
 
-        /*
-        public IActionResult OnPost()
+    public IActionResult OnPost()
+    {
+        if (!ModelState.IsValid) return Page();
+
+        const string sql = @"SELECT TOP (1) userId, [name], [password], [type]
+            FROM dbo.[User]
+            WHERE [name] = @username
+            ORDER BY userId;";
+
+        using var connection = new SqlConnection(_connectionString);
+        connection.Open();
+        using var command = new SqlCommand(sql, connection);
+        command.Parameters.Add("@username", SqlDbType.NChar, 10).Value = Username.Trim();
+        using SqlDataReader reader = command.ExecuteReader();
+
+        if (!reader.Read()) return InvalidLogin();
+
+        string storedHash = reader["password"]?.ToString() ?? "";
+        try
         {
-            using (SqlConnection conn = new SqlConnection(connectionString))
-            {
-                conn.Open();
-                string detailsQuery = "INSERT INTO Koolref.dbo.[User] (userId, name, password) VALUES (26002, @username, @password)";
-
-                using (SqlCommand cmd = new SqlCommand(detailsQuery, conn))
-                {
-
-                    cmd.Parameters.AddWithValue("@username", Username);
-                    cmd.Parameters.AddWithValue("@password", HashBCrypt(Password));
-                    cmd.ExecuteNonQuery();
-                }
-            }
-            return RedirectToPage("/Login");
+            if (!BCrypt.Net.BCrypt.Verify(Password, storedHash)) return InvalidLogin();
         }
-        */
-       
-        public IActionResult OnPost()
+        catch (BCrypt.Net.SaltParseException)
         {
-            using (SqlConnection conn = new SqlConnection(connectionString))
-            {
-                conn.Open();
-
-                string query = "SELECT password FROM Koolref.dbo.[User] WHERE name = @username";
-
-                using (SqlCommand cmd = new SqlCommand(query, conn))
-                {
-                    cmd.Parameters.AddWithValue("@username", Username);
-
-                    object result = cmd.ExecuteScalar();
-
-                    if (result == null)
-                    {
-                        ModelState.AddModelError("", "Invalid username or password");
-                        return Page();
-                    }
-
-                    string storedHash = result.ToString();
-
-                    cmd.Parameters.AddWithValue("@password", HashBCrypt(Password));
-                    cmd.ExecuteNonQuery();
-
-                    bool passwordCorrect = BCrypt.Net.BCrypt.Verify(Password, storedHash);
-
-                    if (!passwordCorrect)
-                    {
-                        ModelState.AddModelError("", "Invalid username or password");
-                        return Page();
-                    }
-
-                    HttpContext.Session.SetString("Username", Username);
-                }
-            }
-
-            return RedirectToPage("/ItemSupply");
+            return InvalidLogin();
         }
 
-        public string HashBCrypt(string data) { return BCrypt.Net.BCrypt.HashPassword(data); }
+        int userId = Convert.ToInt32(reader["userId"]);
+        string accountName = reader["name"]?.ToString()?.Trim() ?? Username.Trim();
+        string userType = reader["type"]?.ToString()?.Trim().ToUpperInvariant() ?? "";
+
+        HttpContext.Session.Clear();
+        HttpContext.Session.SetInt32("UserId", userId);
+        HttpContext.Session.SetString("Username", accountName);
+        HttpContext.Session.SetString("UserType", userType);
+        return RedirectToPage("/ItemSupply");
+    }
+
+    private IActionResult InvalidLogin()
+    {
+        ModelState.AddModelError("", "Invalid username or password");
+        Password = "";
+        return Page();
     }
 }
