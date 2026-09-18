@@ -170,18 +170,22 @@
         (() => {
             const productCatalog = @Html.Raw(productCatalogJson);
             const initialItems = @Html.Raw(initialItemsJson);
-            const dialog = document.getElementById("deliveryDialog");
-            const form = document.getElementById("deliveryForm");
-            const itemContainer = document.getElementById("deliveryItems");
-            const addItemButton = document.getElementById("addDeliveryItem");
+
+            // Page elements
+            const dialog = document.getElementById("deliveryDialog"); // delivery window pop up
+            const form = document.getElementById("deliveryForm"); // the form inside the window
+            const itemContainer = document.getElementById("deliveryItems"); // this is where the delivery item rows are placed
+            const addItemButton = document.getElementById("addDeliveryItem"); // creates a new row
             const currency = new Intl.NumberFormat("en-PH", {
                 style: "currency",
                 currency: "PHP",
                 minimumFractionDigits: 2
             });
 
+            // this normalizes the item name to lower case and removes surrounding space
             const normalise = value => (value || "").normalize("NFKD").toLocaleLowerCase().trim();
 
+            // opens and closes the delivery window/dialog
             const closeDialog = () => dialog.close();
             document.getElementById("deliveryAdd").addEventListener("click", () => dialog.showModal());
             document.getElementById("deliveryClose").addEventListener("click", closeDialog);
@@ -190,6 +194,9 @@
                 if (event.target === dialog) closeDialog();
             });
 
+            // ranks the closest product name in the search
+            // 0 the closest or exact
+            // 99 no match
             const rankProducts = query => {
                 const search = normalise(query);
                 if (!search) return [];
@@ -214,6 +221,7 @@
                     .map(match => match.product);
             };
 
+            // multiplies the price and quantity
             const calculateTotal = row => {
                 const price = Number(row.querySelector(".delivery-price").value);
                 const quantity = Number(row.querySelector(".delivery-quantity").value);
@@ -224,6 +232,7 @@
                     : "";
             };
 
+            // populates the row with the selected product's information
             const selectProduct = (row, product) => {
                 row.querySelector(".delivery-product-id").value = product.code;
                 row.querySelector(".delivery-product-name").value = product.name;
@@ -244,12 +253,14 @@
                 calculateTotal(row);
             };
 
+            // shows the product suggestions based on the input value
             const showSuggestions = row => {
                 const input = row.querySelector(".delivery-product-name");
                 const suggestions = row.querySelector(".product-suggestions");
                 const matches = rankProducts(input.value);
                 suggestions.replaceChildren();
 
+                // 
                 matches.forEach(product => {
                     const option = document.createElement("button");
                     option.type = "button";
