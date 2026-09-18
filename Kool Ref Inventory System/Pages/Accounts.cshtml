@@ -1,0 +1,120 @@
+@page
+@model Kool_Ref_Inventory_System.Pages.AccountsModel
+@{
+    ViewData["Title"] = "User accounts";
+}
+
+<section class="page-heading">
+    <div>
+        <p class="eyebrow">Boss access</p>
+        <h1>User accounts</h1>
+        <p class="page-lead">Create boss or worker accounts and review the current workers.</p>
+    </div>
+    <button class="button button-primary" id="accountAdd" type="button">＋ New account</button>
+</section>
+
+@if (!string.IsNullOrWhiteSpace(Model.SuccessMessage))
+{
+    <div class="app-alert app-alert-success" role="status">@Model.SuccessMessage</div>
+}
+
+<section class="compact-metrics" aria-label="Account summary">
+    <div><span>Workers</span><strong>@Model.Workers.Count.ToString("N0")</strong></div>
+</section>
+
+<dialog class="report-dialog account-dialog" id="accountWindow" aria-labelledby="accountDialogTitle">
+    <form method="post" asp-page-handler="Create" class="report-form">
+        <div class="dialog-header">
+            <div>
+                <p class="section-kicker">Boss access</p>
+                <h2 id="accountDialogTitle">Create account</h2>
+                <p>The user ID is generated automatically using the current year.</p>
+            </div>
+            <button class="dialog-close" id="accountClose" type="button" aria-label="Close account form">×</button>
+        </div>
+
+        <div class="dialog-body">
+            <div asp-validation-summary="All" class="validation-summary"></div>
+            <section class="form-section" aria-labelledby="accountDetailsHeading">
+                <div class="form-section-heading">
+                    <span>01</span>
+                    <div><h3 id="accountDetailsHeading">Account details</h3><p>Choose whether this person is a boss or a worker.</p></div>
+                </div>
+                <div class="form-grid">
+                    <div class="field">
+                        <label asp-for="Account.Name">Name</label>
+                        <input asp-for="Account.Name" maxlength="10" autocomplete="off" placeholder="Account name" />
+                        <span asp-validation-for="Account.Name" class="field-error"></span>
+                    </div>
+                    <div class="field">
+                        <label asp-for="Account.Type">Account type</label>
+                        <select asp-for="Account.Type">
+                            <option value="W">Worker</option>
+                            <option value="B">Boss</option>
+                        </select>
+                        <span asp-validation-for="Account.Type" class="field-error"></span>
+                    </div>
+                    <div class="field">
+                        <label asp-for="Account.Password">Password</label>
+                        <input id="Account_Password" name="Account.Password" type="password" maxlength="128" autocomplete="new-password" placeholder="At least 8 characters" />
+                        <span asp-validation-for="Account.Password" class="field-error"></span>
+                    </div>
+                    <div class="field">
+                        <label asp-for="Account.ConfirmPassword">Confirm password</label>
+                        <input id="Account_ConfirmPassword" name="Account.ConfirmPassword" type="password" maxlength="128" autocomplete="new-password" placeholder="Enter the password again" />
+                        <span asp-validation-for="Account.ConfirmPassword" class="field-error"></span>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <div class="dialog-footer">
+            <button type="button" class="button button-ghost" id="accountCancel">Cancel</button>
+            <button type="submit" class="button button-primary">Create account</button>
+        </div>
+    </form>
+</dialog>
+
+<section class="surface-card">
+    <div class="surface-header">
+        <div><p class="section-kicker">Current team</p><h2>Workers</h2></div>
+        <span class="record-count">@Model.Workers.Count @(Model.Workers.Count == 1 ? "worker" : "workers")</span>
+    </div>
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead><tr><th>User ID</th><th>Name</th><th>Account type</th></tr></thead>
+            <tbody>
+            @if (Model.Workers.Count == 0)
+            {
+                <tr><td colspan="3" class="empty-state">No worker accounts are available yet.</td></tr>
+            }
+            else
+            {
+                @foreach (var worker in Model.Workers)
+                {
+                    <tr>
+                        <td><span class="reference-code">@worker.UserId</span></td>
+                        <td><strong class="item-name">@worker.Name</strong></td>
+                        <td><span class="account-type-badge">Worker</span></td>
+                    </tr>
+                }
+            }
+            </tbody>
+        </table>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        (() => {
+            const dialog = document.getElementById("accountWindow");
+            const closeDialog = () => dialog.close();
+            document.getElementById("accountAdd").addEventListener("click", () => dialog.showModal());
+            document.getElementById("accountClose").addEventListener("click", closeDialog);
+            document.getElementById("accountCancel").addEventListener("click", closeDialog);
+            dialog.addEventListener("click", event => { if (event.target === dialog) closeDialog(); });
+            if (@Model.OpenAccountDialog.ToString().ToLowerInvariant()) dialog.showModal();
+        })();
+    </script>
+}
