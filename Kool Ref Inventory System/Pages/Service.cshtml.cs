@@ -1,394 +1,356 @@
+using System.ComponentModel.DataAnnotations;
+using System.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Data.SqlClient;
-using System.Runtime.CompilerServices;
 
+namespace Kool_Ref_Inventory_System.Pages;
 
-namespace Kool_Ref_Inventory_System.Pages
+public class ServiceModel : PageModel
 {
-    public class ServiceModel : PageModel
+    private readonly string _connectionString;
+
+    public ServiceModel(IConfiguration configuration)
     {
-        [BindProperty] public List<string> Technician { get; set; }
-        [BindProperty] public string WorkScope { get; set; }
-        [BindProperty] public string TimeIn { get; set; }
-        [BindProperty] public string TimeOut { get; set; }
-        [BindProperty] public String DateStarted { get; set; }
-        [BindProperty] public String DateEnded { get; set; }
-        [BindProperty] public string Customer { get; set; }
-        [BindProperty] public string Address { get; set; }
-        [BindProperty] public int DeliveryReceipt { get; set; }
-        [BindProperty] public int InVoice { get; set; }
-        [BindProperty] public string Item { get; set; }
-        [BindProperty] public string Description { get; set; }
-        [BindProperty] public string Supplier { get; set; }
-        [BindProperty] public int Quantity { get; set; }
-        [BindProperty] public decimal Price { get; set; }
-        [BindProperty] public string Location { get; set; }
-        [BindProperty] public string Date { get; set; }
-        public class CombinedViewModel
-        {
-            public Service ServiceReport { get; set; }
-            public List<string> Technicians { get; set; }
-            public List<string> ScopesOfWork { get; set; }
-            public Items Inventory { get; set; }
-        }
-        public List<CombinedViewModel> Records { get; set; }
-        string connectionString = "Server=localhost\\SQLEXPRESS;Database=Koolref;Trusted_Connection=True;TrustServerCertificate=True;";
-        //string connectionString = "Server=db,1433;Database=Koolref;User Id=sa;Password=YourStrongPassword123!;TrustServerCertificate=True;";
+        _connectionString = configuration.GetConnectionString("DefaultConnection")
+            ?? throw new InvalidOperationException("The DefaultConnection connection string is not configured.");
+    }
 
-        public IActionResult OnPost()
+    [BindProperty] public ServiceReportInput Report { get; set; } = new();
+    public List<ServiceRecord> Records { get; private set; } = new();
+    public List<ClientOption> ClientCatalog { get; private set; } = new();
+    public List<string> TechnicianSuggestions { get; private set; } = new();
+    public bool OpenReportDialog { get; private set; }
+    [TempData] public string? SuccessMessage { get; set; }
+
+    public IActionResult OnGet()
+    {
+        if (!IsLoggedIn()) return RedirectToPage("/Login");
+        LoadPageData();
+        EnsureRepeatableInputs();
+        return Page();
+    }
+
+    public IActionResult OnPost()
+    {
+        if (!IsLoggedIn()) return RedirectToPage("/Login");
+
+        Report.Technicians ??= new();
+        Report.Technicians = Report.Technicians
+            .Select(name => name?.Trim() ?? string.Empty)
+            .Where(name => !string.IsNullOrWhiteSpace(name))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+        Report.ScopesOfWork ??= new();
+        Report.ScopesOfWork = Report.ScopesOfWork
+            .Select(scope => scope?.Trim() ?? string.Empty)
+            .Where(scope => !string.IsNullOrWhiteSpace(scope))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        LoadSuggestions();
+        ValidateReport();
+        if (!ModelState.IsValid) return ShowReportDialog();
+
+        try
         {
-            using (SqlConnection conn = new SqlConnection(connectionString))
+            using var connection = new SqlConnection(_connectionString);
+            connection.Open();
+            using SqlTransaction transaction = connection.BeginTransaction(IsolationLevel.Serializable);
+            try
             {
-                conn.Open();
-                string serviceQuery = "INSERT INTO Koolref.dbo.ServiceReport (WorkScope, TimeIn, TimeOut, DateStarted, DateEnded, Customer, Adddress, DeliveryReceipt, InVoice) VALUES (@workscope, @timeIn, @timeOut, @dateStarted, @dateEnded, @customer, @address, @deliveryReceipt, @inVoice)";
-                string inventoryQuery = "INSERT INTO Koolref.dbo.InandOutSystem (Item, Description, Supplier, Date, Quantity, Price, Location, DeliveryReceipt, InVoice) VALUES (@item, @description, @supplier, @date, @quantity, @price, @location, @deliveryReceipt, @inVoice)";
-                string technicianListQuery = "INSERT INTO Koolref.dbo.TechnicianListOrders (Technicians0, Technicians1, Technicians2, Technicians3, Technicians4, Technicians5, Technicians6, Technicians7, Technicians8, Technicians9) VALUES (@technicians0, @technicians1, @technicians2, @technicians3, @technicians4, @technicians5, @technicians6, @technicians7, @technicians8, @technicians9)";
-
-                // Technician Query
-                using (SqlCommand cmd = new SqlCommand(technicianListQuery, conn))
-                {
-                    for (int i = 0; i < 10; i++)
-                    {
-                        if (i < Technician.Count)
-                            cmd.Parameters.AddWithValue($"@technicians{i}", (object)Technician[i] ?? DBNull.Value);
-                        else
-                            cmd.Parameters.AddWithValue($"@technicians{i}", DBNull.Value);
-                    }
-                    cmd.ExecuteNonQuery();
-                }
-                /*
-                using (SqlCommand cmd = new SqlCommand(technicianListQuery, conn))
-                {
-                    // Loop 10 times to fill @technicians0 through @technicians9
-                    for (int i = 0; i < 10; i++)
-                    {
-                        // Check if the list has an item at this index
-                        object value = (InputTechnician != null && InputTechnician.Count > i)
-                            ? (object)InputTechnician[i]
-                            : DBNull.Value;
-
-                        cmd.Parameters.AddWithValue($"@technicians{i}", value);
-                    }
-
-                    cmd.ExecuteNonQuery();
-                }
-                */
-
-                // Service Report Query
-                using (SqlCommand cmd = new SqlCommand(serviceQuery, conn))
-                {
-                    cmd.Parameters.AddWithValue("@workScope", WorkScope);
-                    cmd.Parameters.AddWithValue("@timeIn", string.IsNullOrEmpty(TimeIn) ? (object)DBNull.Value : TimeIn);
-                    cmd.Parameters.AddWithValue("@timeOut", string.IsNullOrEmpty(TimeOut) ? (object)DBNull.Value : TimeOut);
-                    cmd.Parameters.AddWithValue("@dateStarted", string.IsNullOrEmpty(DateStarted) ? (object)DBNull.Value : DateStarted);
-                    cmd.Parameters.AddWithValue("@dateEnded", string.IsNullOrEmpty(DateEnded) ? (object)DBNull.Value : DateEnded);
-                    cmd.Parameters.AddWithValue("@customer", Customer);
-                    cmd.Parameters.AddWithValue("@address", Address);
-                    if (DeliveryReceipt == 0)
-                    {
-                        cmd.Parameters.AddWithValue("@deliveryReceipt", DBNull.Value);
-                        cmd.Parameters.AddWithValue("@inVoice", InVoice);
-                    }
-                    else
-                    {
-                        cmd.Parameters.AddWithValue("@inVoice", DBNull.Value);
-                        cmd.Parameters.AddWithValue("@deliveryReceipt", DeliveryReceipt);
-                    }
-                    cmd.ExecuteNonQuery();
-                }
-           
-                // Inventory Query
-                using (SqlCommand cmd = new SqlCommand(inventoryQuery, conn))
-                {
-                    cmd.Parameters.AddWithValue("@item", Item);
-                    cmd.Parameters.AddWithValue("@description", Description);
-                    cmd.Parameters.AddWithValue("@supplier", Supplier);
-                    cmd.Parameters.AddWithValue("@date", string.IsNullOrEmpty(Date) ? (object)DBNull.Value : Date);
-                    cmd.Parameters.AddWithValue("@quantity", Quantity);
-                    cmd.Parameters.AddWithValue("@price", Price);
-                    cmd.Parameters.AddWithValue("@location", Location);
-                    if (DeliveryReceipt == 0)
-                    {
-
-                        cmd.Parameters.AddWithValue("@deliveryReceipt", DBNull.Value);
-                        cmd.Parameters.AddWithValue("@inVoice", InVoice);
-                    }
-                    else
-                    {
-                        cmd.Parameters.AddWithValue("@inVoice", DBNull.Value);
-                        cmd.Parameters.AddWithValue("@deliveryReceipt", DeliveryReceipt);
-                    }
-                    cmd.ExecuteNonQuery();
-
-                }
-            }  
-            return RedirectToPage("/Service");
+                int clientId = GetOrCreateClient(connection, transaction);
+                InsertServiceReport(connection, transaction, clientId);
+                InsertScopes(connection, transaction);
+                InsertTechnicians(connection, transaction);
+                transaction.Commit();
+            }
+            catch
+            {
+                transaction.Rollback();
+                throw;
+            }
+        }
+        catch (SqlException exception) when (exception.Number is 2601 or 2627)
+        {
+            ModelState.AddModelError("Report.ServiceReceipt", "That service receipt already exists.");
+            return ShowReportDialog();
+        }
+        catch (SqlException exception) when (exception.Number == 547)
+        {
+            ModelState.AddModelError("Report.DeliveryReceipt", "The delivery receipt does not exist in the Inventory Ledger.");
+            return ShowReportDialog();
         }
 
-        public IActionResult OnGet()
+        SuccessMessage = $"Service report {Report.ServiceReceipt} was saved successfully.";
+        return RedirectToPage();
+    }
+
+    private bool IsLoggedIn() => HttpContext.Session.GetString("Username") != null;
+
+    private void ValidateReport()
+    {
+        if (Report.Technicians.Count == 0)
+            ModelState.AddModelError("Report.Technicians", "Add at least one technician.");
+        if (Report.Technicians.Count > 10)
+            ModelState.AddModelError("Report.Technicians", "A report can have at most ten technicians.");
+        if (Report.Technicians.Any(name => name.Length > 200))
+            ModelState.AddModelError("Report.Technicians", "Technician names cannot exceed 200 characters.");
+
+        if (Report.ScopesOfWork.Count == 0)
+            ModelState.AddModelError("Report.ScopesOfWork", "Add at least one scope of work.");
+        if (Report.ScopesOfWork.Count > 20)
+            ModelState.AddModelError("Report.ScopesOfWork", "A report can have at most twenty scopes of work.");
+        if (Report.ScopesOfWork.Any(scope => scope.Length > 2000))
+            ModelState.AddModelError("Report.ScopesOfWork", "Each scope of work cannot exceed 2,000 characters.");
+
+        if (Report.DateStarted.HasValue && Report.DateEnded.HasValue)
         {
-            if (HttpContext.Session.GetString("Username") == null)
-            {
-                return RedirectToPage("/Login");
-            }
+            if (Report.DateEnded.Value.Date < Report.DateStarted.Value.Date)
+                ModelState.AddModelError("Report.DateEnded", "Date ended cannot be before date started.");
+            else if (Report.DateEnded.Value.Date == Report.DateStarted.Value.Date
+                && Report.TimeIn.HasValue && Report.TimeOut.HasValue
+                && Report.TimeOut.Value < Report.TimeIn.Value)
+                ModelState.AddModelError("Report.TimeOut", "Time out cannot be before time in on the same date.");
+        }
 
-            using (SqlConnection conn = new SqlConnection(connectionString))
-            {
-                conn.Open();
-                //string query = "SELECT * FROM dbo.InandOutSystem";
-                //string query = "SELECT * FROM dbo.ServiceReport JOIN dbo.TechnicianListOrders ON dbo.ServiceReport.JobOrder=dbo.TechnicianListOrders.JobOrder JOIN dbo.InandOutSystem ON dbo.ServiceReport.InVoice=dbo.InandOutSystem.inVoice";
-                string query = @"
-                    DECLARE @cols nvarchar(MAX);
-                    DECLARE @sql  nvarchar(MAX);
+    }
 
-                    WITH NumberedScopes AS
-                    (
-                        SELECT
-                            serviceReceipt,
-                            scopeOfWork,
-                            ROW_NUMBER() OVER (
-                                PARTITION BY serviceReceipt
-                                ORDER BY scopeOfWork
-                            ) AS rn
-                        FROM [Koolref].[dbo].[ServiceScopeOfWork]
-                    )
-                    SELECT @cols = STRING_AGG(
-                        QUOTENAME('Scope of Work #' + CAST(rn AS varchar(10))),
-                        ','
-                    )
-                    FROM
-                    (
-                        SELECT DISTINCT rn
-                        FROM NumberedScopes
-                    ) x;
+    private int GetOrCreateClient(SqlConnection connection, SqlTransaction transaction)
+    {
+        const string find = @"SELECT TOP (1) clientId FROM dbo.Client WITH (UPDLOCK, HOLDLOCK)
+                              WHERE [name] = @name AND [address] = @address ORDER BY clientId;";
+        using (var command = new SqlCommand(find, connection, transaction))
+        {
+            command.Parameters.Add("@name", SqlDbType.NVarChar, 200).Value = Report.Customer.Trim();
+            command.Parameters.Add("@address", SqlDbType.NVarChar, 500).Value = Report.Address.Trim();
+            object? value = command.ExecuteScalar();
+            if (value != null && value != DBNull.Value) return Convert.ToInt32(value);
+        }
 
+        int clientId;
+        using (var command = new SqlCommand(
+            "SELECT ISNULL(MAX(clientId), 25999) + 1 FROM dbo.Client WITH (UPDLOCK, HOLDLOCK);",
+            connection, transaction))
+            clientId = Convert.ToInt32(command.ExecuteScalar());
 
-                    SET @sql = '
-                    WITH NumberedScopes AS
-                    (
-                        SELECT
-                            serviceReceipt,
-                            scopeOfWork,
-                            ''Scope of Work #'' + CAST(
-                                ROW_NUMBER() OVER (
-                                    PARTITION BY serviceReceipt
-                                    ORDER BY scopeOfWork
-                                ) AS varchar(10)
-                            ) AS scopeColumn
-                        FROM [Koolref].[dbo].[ServiceScopeOfWork]
-                    ),
+        const string insert = "INSERT INTO dbo.Client (clientId, [name], [address]) VALUES (@id, @name, @address);";
+        using var insertCommand = new SqlCommand(insert, connection, transaction);
+        insertCommand.Parameters.Add("@id", SqlDbType.Int).Value = clientId;
+        insertCommand.Parameters.Add("@name", SqlDbType.NVarChar, 200).Value = Report.Customer.Trim();
+        insertCommand.Parameters.Add("@address", SqlDbType.NVarChar, 500).Value = Report.Address.Trim();
+        insertCommand.ExecuteNonQuery();
+        return clientId;
+    }
 
-                    Techs AS
-                    (
-                        SELECT
-                            serviceReceipt,
-                            STRING_AGG(technician, '', '') AS technicians
-                        FROM dbo.ServiceTechnician
-                        GROUP BY serviceReceipt
-                    )
+    private void InsertServiceReport(SqlConnection connection, SqlTransaction transaction, int clientId)
+    {
+        const string sql = @"INSERT INTO dbo.ServiceReport
+            (serviceReceipt, timeIn, timeOut, dateStarted, dateEnded, clientId, deliveryReceipt)
+            VALUES (@receipt, @timeIn, @timeOut, @started, @ended, @clientId, @deliveryReceipt);";
+        using var command = new SqlCommand(sql, connection, transaction);
+        command.Parameters.Add("@receipt", SqlDbType.Int).Value = Report.ServiceReceipt!.Value;
+        command.Parameters.Add("@timeIn", SqlDbType.Time).Value = Report.TimeIn!.Value;
+        command.Parameters.Add("@timeOut", SqlDbType.Time).Value = Report.TimeOut!.Value;
+        command.Parameters.Add("@started", SqlDbType.Date).Value = Report.DateStarted!.Value.Date;
+        command.Parameters.Add("@ended", SqlDbType.Date).Value = Report.DateEnded!.Value.Date;
+        command.Parameters.Add("@clientId", SqlDbType.Int).Value = clientId;
+        command.Parameters.Add("@deliveryReceipt", SqlDbType.Int).Value = Report.DeliveryReceipt!.Value;
+        command.ExecuteNonQuery();
+    }
 
-                    SELECT
-                        sr.serviceReceipt,
-                        sr.timeIn,
-                        sr.timeOut,
-                        sr.dateStarted,
-                        sr.dateEnded,
-
-                        c.name AS clientName,
-                        c.address AS clientAddress,\
-
-                        t.technicians,
-                        ' + @cols + '
-
-                    FROM dbo.ServiceReport sr
-
-                    LEFT JOIN dbo.Client c
-                        ON sr.clientId = c.clientId
-
-                    LEFT JOIN Techs t
-                        ON sr.serviceReceipt = t.serviceReceipt
-
-                    LEFT JOIN
-                    (
-                        SELECT *
-                        FROM NumberedScopes
-                        PIVOT
-                        (
-                            MAX(scopeOfWork)
-                            FOR scopeColumn IN (' + @cols + ')
-                        ) p
-                    ) s
-                        ON sr.serviceReceipt = s.serviceReceipt
-
-                    ORDER BY sr.serviceReceipt DESC;
-                    ';
-
-                    EXEC sp_executesql @sql;";
-                    
-                    /*
-                    @"
-                    DECLARE @cols nvarchar(MAX);
-                    DECLARE @sql  nvarchar(MAX);
-
-                    WITH NumberedScopes AS
-                    (
-                        SELECT
-                            serviceReceipt,
-                            scopeOfWork,
-                            ROW_NUMBER() OVER (
-                                PARTITION BY serviceReceipt
-                                ORDER BY scopeOfWork
-                            ) AS rn
-                        FROM [Koolref].[dbo].[ServiceScopeOfWork]
-                    )
-                    SELECT @cols = STRING_AGG(
-                        QUOTENAME('Scope of Work #' + CAST(rn AS varchar(10))),
-                        ','
-                    )
-                    FROM
-                    (
-                        SELECT DISTINCT rn
-                        FROM NumberedScopes
-                    ) x;
-
-
-                    SET @sql = '
-                    WITH NumberedScopes AS
-                    (
-                        SELECT
-                            serviceReceipt,
-                            scopeOfWork,
-                            ''Scope of Work #'' + CAST(
-                                ROW_NUMBER() OVER (
-                                    PARTITION BY serviceReceipt
-                                    ORDER BY scopeOfWork
-                                ) AS varchar(10)
-                            ) AS scopeColumn
-                        FROM [Koolref].[dbo].[ServiceScopeOfWork]
-                    ),
-
-                    Techs AS
-                    (
-                        SELECT
-                            serviceReceipt,
-                            STRING_AGG(technician, '', '') AS technicians
-                        FROM dbo.ServiceTechnician
-                        GROUP BY serviceReceipt
-                    )
-
-                    SELECT
-                        sr.serviceReceipt,
-                        sr.timeIn,
-                        sr.timeOut,
-                        sr.dateStarted,
-                        sr.dateEnded,
-                        sr.clientId,
-                        t.technicians,
-                        ' + @cols + '
-
-                    FROM dbo.ServiceReport sr
-
-                    LEFT JOIN Techs t
-                        ON sr.serviceReceipt = t.serviceReceipt
-
-                    LEFT JOIN
-                    (
-                        SELECT *
-                        FROM NumberedScopes
-                        PIVOT
-                        (
-                            MAX(scopeOfWork)
-                            FOR scopeColumn IN (' + @cols + ')
-                        ) p
-                    ) s
-                        ON sr.serviceReceipt = s.serviceReceipt
-
-                    ORDER BY sr.serviceReceipt DESC;
-                    ';
-
-                    EXEC sp_executesql @sql;";
-                */
-
-                using (SqlCommand cmd = new SqlCommand(query, conn))
-                {
-                    using (SqlDataReader reader = cmd.ExecuteReader())
-                    {
-                        Records = new List<CombinedViewModel>();
-
-                        while (reader.Read())
-                        {
-                            var sow = new List<string>();
-
-                            for (int columnIndex = 0; columnIndex < reader.FieldCount; columnIndex++)
-                            {
-                                string columnName = reader.GetName(columnIndex);
-
-                                if (!columnName.StartsWith("Scope of Work #", StringComparison.OrdinalIgnoreCase)
-                                    || reader.IsDBNull(columnIndex))
-                                {
-                                    continue;
-                                }
-
-                                string value = reader.GetValue(columnIndex).ToString() ?? "";
-                                if (!string.IsNullOrWhiteSpace(value))
-                                {
-                                    sow.Add(value);
-                                }
-                            }
-
-                            Records.Add(new CombinedViewModel
-                            {
-                                ServiceReport = new Service
-                                {
-                                    timeIn = reader["timeIn"]?.ToString() ?? "",
-                                    timeOut = reader["timeOut"]?.ToString() ?? "",
-                                    dateStarted = reader["dateStarted"] != DBNull.Value
-                                        ? Convert.ToDateTime(reader["dateStarted"]).ToString("yyyy-MM-dd")
-                                        : "",
-                                    dateEnded = reader["dateEnded"] != DBNull.Value
-                                        ? Convert.ToDateTime(reader["dateEnded"]).ToString("yyyy-MM-dd")
-                                        : "",
-                                    client_name = reader["clientName"]?.ToString() ?? "",
-                                    client_location = reader["clientAddress"]?.ToString() ?? "",
-                                    //client_id = Convert.ToInt32(reader["clientId"]),
-                                    //address = reader["location"]?.ToString() ?? "",
-                                    serviceReceipt = Convert.ToInt32(reader["serviceReceipt"]),
-                                    technician = reader["technicians"]?.ToString() ?? ""
-                                },
-
-                                ScopesOfWork = sow,
-                                /*
-                                Inventory = new Items
-                                {
-                                    itemName = reader["Item"].ToString(),
-                                    delivery_date = reader["Date"] == DBNull.Value ? null :
-                                        Convert.ToDateTime(reader["Date"]).ToString("yyyy-MM-dd"),
-                                    itemQuantity = Convert.ToInt32(reader["Quantity"]),
-                                    itemPricePerX = Convert.ToDecimal(reader["Price"]),
-                                    delivery_location = reader["Location"].ToString(),
-                                    deliveryReceipt = Convert.ToInt32(reader["deliveryReceipt"])
-                                }
-                                */
-                            });
-                        }
-                    }
-                }
-            }
-            
-            return Page();
+    private void InsertScopes(SqlConnection connection, SqlTransaction transaction)
+    {
+        const string sql = "INSERT INTO dbo.ServiceScopeOfWork (serviceReceipt, scopeOfWork) VALUES (@receipt, @scope);";
+        foreach (string scope in Report.ScopesOfWork)
+        {
+            using var command = new SqlCommand(sql, connection, transaction);
+            command.Parameters.Add("@receipt", SqlDbType.Int).Value = Report.ServiceReceipt!.Value;
+            command.Parameters.Add("@scope", SqlDbType.NVarChar, -1).Value = scope;
+            command.ExecuteNonQuery();
         }
     }
-    public class Service
+
+    private void InsertTechnicians(SqlConnection connection, SqlTransaction transaction)
     {
-        public int serviceReceipt { get; set; }
-        public string timeIn { get; set; }
-        public string timeOut { get; set; }
-        public string dateStarted { get; set; }
-        public string dateEnded { get; set; }
-        public string client_location { get; set; }
-        public string client_name { get; set; }
-        public string address { get; set; }
-        public string technician { get; set; }
+        const string sql = "INSERT INTO dbo.ServiceTechnician (serviceReceipt, technician) VALUES (@receipt, @name);";
+        foreach (string name in Report.Technicians)
+        {
+            using var command = new SqlCommand(sql, connection, transaction);
+            command.Parameters.Add("@receipt", SqlDbType.Int).Value = Report.ServiceReceipt!.Value;
+            command.Parameters.Add("@name", SqlDbType.NVarChar, 200).Value = name;
+            command.ExecuteNonQuery();
+        }
+    }
+
+    private IActionResult ShowReportDialog()
+    {
+        LoadRecords();
+        EnsureRepeatableInputs();
+        OpenReportDialog = true;
+        return Page();
+    }
+
+    private void EnsureRepeatableInputs()
+    {
+        if (Report.Technicians == null || Report.Technicians.Count == 0)
+            Report.Technicians = new() { string.Empty };
+        if (Report.ScopesOfWork == null || Report.ScopesOfWork.Count == 0)
+            Report.ScopesOfWork = new() { string.Empty };
+    }
+
+    private void LoadPageData()
+    {
+        using var connection = new SqlConnection(_connectionString);
+        connection.Open();
+        ClientCatalog = ReadClientCatalog(connection);
+        TechnicianSuggestions = ReadSuggestions(connection, "technician", "dbo.ServiceTechnician");
+        Records = ReadRecords(connection);
+    }
+
+    private void LoadSuggestions()
+    {
+        using var connection = new SqlConnection(_connectionString);
+        connection.Open();
+        ClientCatalog = ReadClientCatalog(connection);
+        TechnicianSuggestions = ReadSuggestions(connection, "technician", "dbo.ServiceTechnician");
+    }
+
+    private void LoadRecords()
+    {
+        using var connection = new SqlConnection(_connectionString);
+        connection.Open();
+        Records = ReadRecords(connection);
+    }
+
+    private static List<string> ReadSuggestions(SqlConnection connection, string column, string table)
+    {
+        string sql = $"SELECT DISTINCT {column} FROM {table} WHERE NULLIF(LTRIM(RTRIM({column})), '') IS NOT NULL ORDER BY {column};";
+        var result = new List<string>();
+        using var command = new SqlCommand(sql, connection);
+        using SqlDataReader reader = command.ExecuteReader();
+        while (reader.Read()) result.Add(reader.GetString(0).Trim());
+        return result;
+    }
+
+    private static List<ClientOption> ReadClientCatalog(SqlConnection connection)
+    {
+        const string sql = @"SELECT clientId, [name], [address]
+                             FROM dbo.Client
+                             ORDER BY [name], [address], clientId;";
+        var result = new List<ClientOption>();
+        using var command = new SqlCommand(sql, connection);
+        using SqlDataReader reader = command.ExecuteReader();
+        while (reader.Read())
+            result.Add(new ClientOption {
+                Id = Convert.ToInt32(reader["clientId"]),
+                Name = reader["name"]?.ToString()?.Trim() ?? "",
+                Address = reader["address"]?.ToString()?.Trim() ?? ""
+            });
+        return result;
+    }
+
+    private static List<ServiceRecord> ReadRecords(SqlConnection connection)
+    {
+        const string sql = @"SELECT sr.serviceReceipt, sr.timeIn, sr.timeOut, sr.dateStarted, sr.dateEnded,
+            c.[name] clientName, c.[address] clientAddress, sr.deliveryReceipt
+            FROM dbo.ServiceReport sr INNER JOIN dbo.Client c ON c.clientId = sr.clientId
+            ORDER BY sr.serviceReceipt DESC;";
+        var result = new List<ServiceRecord>();
+        using (var command = new SqlCommand(sql, connection))
+        using (SqlDataReader reader = command.ExecuteReader())
+            while (reader.Read())
+                result.Add(new ServiceRecord {
+                    ServiceReceipt = Convert.ToInt32(reader["serviceReceipt"]),
+                    TimeIn = (TimeSpan)reader["timeIn"], TimeOut = (TimeSpan)reader["timeOut"],
+                    DateStarted = Convert.ToDateTime(reader["dateStarted"]), DateEnded = Convert.ToDateTime(reader["dateEnded"]),
+                    Customer = reader["clientName"]?.ToString() ?? "", Address = reader["clientAddress"]?.ToString() ?? "",
+                    DeliveryReceipt = reader["deliveryReceipt"] == DBNull.Value
+                        ? null
+                        : Convert.ToInt32(reader["deliveryReceipt"])
+                });
+
+        var byReceipt = result.ToDictionary(record => record.ServiceReceipt);
+        LoadChildren(connection, "SELECT serviceReceipt, technician FROM dbo.ServiceTechnician ORDER BY serviceReceipt DESC, technician;",
+            byReceipt, (record, value) => record.Technicians.Add(value));
+        LoadChildren(connection, "SELECT serviceReceipt, scopeOfWork FROM dbo.ServiceScopeOfWork ORDER BY serviceReceipt DESC, scopeOfWork;",
+            byReceipt, (record, value) => record.ScopesOfWork.Add(value));
+        LoadDeliveryItems(connection, byReceipt);
+        return result;
+    }
+
+    private static void LoadDeliveryItems(SqlConnection connection, Dictionary<int, ServiceRecord> records)
+    {
+        const string sql = @"SELECT sr.serviceReceipt, dpi.itemId, item.[name] itemName,
+            CASE WHEN dpi.total IS NOT NULL AND dpi.quantity > 0 THEN dpi.total / dpi.quantity ELSE item.price END unitPrice,
+            dpi.quantity, dpi.total
+            FROM dbo.ServiceReport sr
+            INNER JOIN dbo.DeliveryProcessedItem dpi ON dpi.deliveryReceipt = sr.deliveryReceipt
+            OUTER APPLY (SELECT TOP (1) catalog.[name], catalog.price FROM dbo.ItemList catalog
+                         WHERE catalog.itemId = dpi.itemId ORDER BY catalog.[name]) item
+            ORDER BY sr.serviceReceipt DESC, dpi.itemId;";
+        using var command = new SqlCommand(sql, connection);
+        using SqlDataReader reader = command.ExecuteReader();
+        while (reader.Read())
+        {
+            if (!records.TryGetValue(Convert.ToInt32(reader["serviceReceipt"]), out ServiceRecord? record))
+                continue;
+
+            record.DeliveryItems.Add(new DeliveryItem {
+                ItemId = reader["itemId"]?.ToString() ?? "",
+                ItemName = reader["itemName"]?.ToString() ?? "",
+                Quantity = Convert.ToInt32(reader["quantity"]),
+                UnitPrice = reader["unitPrice"] == DBNull.Value ? null : Convert.ToDecimal(reader["unitPrice"]),
+                Total = reader["total"] == DBNull.Value ? null : Convert.ToDecimal(reader["total"])
+            });
+        }
+    }
+
+    private static void LoadChildren(SqlConnection connection, string sql, Dictionary<int, ServiceRecord> records,
+        Action<ServiceRecord, string> add)
+    {
+        using var command = new SqlCommand(sql, connection);
+        using SqlDataReader reader = command.ExecuteReader();
+        while (reader.Read())
+            if (records.TryGetValue(Convert.ToInt32(reader[0]), out ServiceRecord? record))
+                add(record, reader[1]?.ToString() ?? "");
+    }
+
+    public class ServiceReportInput
+    {
+        [Required(ErrorMessage = "Service receipt is required."), Range(1, int.MaxValue)] public int? ServiceReceipt { get; set; }
+        public List<string> ScopesOfWork { get; set; } = new() { "" };
+        [Required] public TimeSpan? TimeIn { get; set; }
+        [Required] public TimeSpan? TimeOut { get; set; }
+        [Required, DataType(DataType.Date)] public DateTime? DateStarted { get; set; } = DateTime.Today;
+        [Required, DataType(DataType.Date)] public DateTime? DateEnded { get; set; } = DateTime.Today;
+        [Required, StringLength(200)] public string Customer { get; set; } = "";
+        [Required, StringLength(500)] public string Address { get; set; } = "";
+        public List<string> Technicians { get; set; } = new() { "" };
+        [Required(ErrorMessage = "Delivery receipt is required."), Range(1, int.MaxValue)] public int? DeliveryReceipt { get; set; }
+    }
+
+    public class ClientOption { public int Id { get; set; } public string Name { get; set; } = ""; public string Address { get; set; } = ""; }
+    public class ServiceRecord
+    {
+        public int ServiceReceipt { get; set; }
+        public TimeSpan TimeIn { get; set; }
+        public TimeSpan TimeOut { get; set; }
+        public DateTime DateStarted { get; set; }
+        public DateTime DateEnded { get; set; }
+        public string Customer { get; set; } = "";
+        public string Address { get; set; } = "";
+        public List<string> Technicians { get; } = new();
+        public List<string> ScopesOfWork { get; } = new();
+        public int? DeliveryReceipt { get; set; }
+        public List<DeliveryItem> DeliveryItems { get; } = new();
+    }
+    public class DeliveryItem
+    {
+        public string ItemId { get; set; } = "";
+        public string ItemName { get; set; } = "";
+        public int Quantity { get; set; }
+        public decimal? UnitPrice { get; set; }
+        public decimal? Total { get; set; }
     }
 }

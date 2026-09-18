@@ -1,290 +1,379 @@
 @page
-@model Kool_Ref_Inventory_System.Pages.ServiceModel
 @using System.Globalization
+@using System.Text.Json
+@model Kool_Ref_Inventory_System.Pages.ServiceModel
 @{
     ViewData["Title"] = "Service reports";
-    var reportCount = Model.Records?.Count ?? 0;
+    var pesoCulture = CultureInfo.GetCultureInfo("en-PH");
+    var jsonOptions = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+    var clientCatalogJson = JsonSerializer.Serialize(Model.ClientCatalog, jsonOptions);
+    var technicianSuggestionsJson = JsonSerializer.Serialize(Model.TechnicianSuggestions);
+    var initialTechniciansJson = JsonSerializer.Serialize(Model.Report.Technicians);
+    var initialScopesJson = JsonSerializer.Serialize(Model.Report.ScopesOfWork);
 }
 
 <section class="page-heading">
     <div>
         <p class="eyebrow">Field operations</p>
         <h1>Service reports</h1>
-        <p class="page-lead">Record completed service work and review the inventory movements connected to each job.</p>
+        <p class="page-lead">Record completed service work and connect it to an existing delivery receipt.</p>
     </div>
-    <button class="button button-primary" id="reportAdd" type="button">
-        <span aria-hidden="true">＋</span> New service report
-    </button>
+    <button class="button button-primary" id="reportAdd" type="button">＋ New service report</button>
 </section>
 
+@if (!string.IsNullOrWhiteSpace(Model.SuccessMessage))
+{
+    <div class="app-alert app-alert-success" role="status">@Model.SuccessMessage</div>
+}
+
 <section class="compact-metrics" aria-label="Service summary">
-    <div><span>Service reports</span><strong>@reportCount.ToString("N0")</strong></div>
+    <div><span>Service reports</span><strong>@Model.Records.Count.ToString("N0")</strong></div>
 </section>
 
 <dialog class="report-dialog" id="reportWindow" aria-labelledby="reportDialogTitle">
-    <form method="post" asp-page="Service" class="report-form">
+    <form method="post" class="report-form" id="serviceForm">
         <div class="dialog-header">
             <div>
                 <p class="section-kicker">New entry</p>
-                <h2 id="reportDialogTitle">Service and inventory report</h2>
-                <p>Complete the job details and related inventory movement.</p>
+                <h2 id="reportDialogTitle">Create service report</h2>
+                <p>All details below are saved together under one service receipt.</p>
             </div>
             <button class="dialog-close" id="reportClose" type="button" aria-label="Close report form">×</button>
         </div>
 
         <div class="dialog-body">
+            <div asp-validation-summary="All" class="validation-summary"></div>
+
             <section class="form-section" aria-labelledby="serviceDetailsHeading">
                 <div class="form-section-heading">
                     <span>01</span>
-                    <div>
-                        <h3 id="serviceDetailsHeading">Service details</h3>
-                        <p>Describe the work, schedule and customer.</p>
+                    <div><h3 id="serviceDetailsHeading">Service details</h3><p>Enter the receipt, work schedule and customer.</p></div>
+                </div>
+                <div class="form-grid">
+                    <div class="field">
+                        <label asp-for="Report.ServiceReceipt">Service receipt</label>
+                        <input asp-for="Report.ServiceReceipt" type="number" min="1" step="1" placeholder="Required" />
+                        <span asp-validation-for="Report.ServiceReceipt" class="field-error"></span>
+                    </div>
+                    <div class="field">
+                        <label asp-for="Report.TimeIn">Time in</label>
+                        <input asp-for="Report.TimeIn" type="time" />
+                        <span asp-validation-for="Report.TimeIn" class="field-error"></span>
+                    </div>
+                    <div class="field">
+                        <label asp-for="Report.TimeOut">Time out</label>
+                        <input asp-for="Report.TimeOut" type="time" />
+                        <span asp-validation-for="Report.TimeOut" class="field-error"></span>
+                    </div>
+                    <div class="field">
+                        <label asp-for="Report.DateStarted">Date started</label>
+                        <input asp-for="Report.DateStarted" type="date" />
+                        <span asp-validation-for="Report.DateStarted" class="field-error"></span>
+                    </div>
+                    <div class="field">
+                        <label asp-for="Report.DateEnded">Date ended</label>
+                        <input asp-for="Report.DateEnded" type="date" />
+                        <span asp-validation-for="Report.DateEnded" class="field-error"></span>
+                    </div>
+                    <div class="field product-picker">
+                        <label asp-for="Report.Customer">Customer name</label>
+                        <input asp-for="Report.Customer" id="serviceClient" maxlength="200" placeholder="Start typing a client name" autocomplete="off" />
+                        <div class="product-suggestions" id="clientSuggestions" role="listbox" hidden></div>
+                        <span asp-validation-for="Report.Customer" class="field-error"></span>
+                    </div>
+                    <div class="field">
+                        <label asp-for="Report.Address">Service address</label>
+                        <input asp-for="Report.Address" id="serviceAddress" maxlength="500" placeholder="Filled when a client is selected" autocomplete="street-address" />
+                        <span asp-validation-for="Report.Address" class="field-error"></span>
                     </div>
                 </div>
+            </section>
 
-                <div class="form-grid">
-                    <div class="field field-span-2">
-                        <label asp-for="WorkScope">Work scope</label>
-                        <textarea asp-for="WorkScope" rows="3" placeholder="Describe the work completed" required></textarea>
-                    </div>
-                    <div class="field">
-                        <label asp-for="TimeIn">Time in</label>
-                        <input type="time" asp-for="TimeIn" required />
-                    </div>
-                    <div class="field">
-                        <label asp-for="TimeOut">Time out</label>
-                        <input type="time" asp-for="TimeOut" required />
-                    </div>
-                    <div class="field">
-                        <label asp-for="DateStarted">Date started</label>
-                        <input type="date" asp-for="DateStarted" required />
-                    </div>
-                    <div class="field">
-                        <label asp-for="DateEnded">Date ended</label>
-                        <input type="date" asp-for="DateEnded" required />
-                    </div>
-                    <div class="field">
-                        <label asp-for="Customer">Customer name</label>
-                        <input type="text" asp-for="Customer" placeholder="Customer or company" autocomplete="organization" required />
-                    </div>
-                    <div class="field">
-                        <label asp-for="Address">Service address</label>
-                        <input type="text" asp-for="Address" placeholder="Street, city or site" autocomplete="street-address" required />
-                    </div>
+            <section class="form-section" aria-labelledby="scopesHeading">
+                <div class="form-section-heading">
+                    <span>02</span>
+                    <div><h3 id="scopesHeading">Scope of work</h3><p>Add each completed task as a separate entry.</p></div>
+                </div>
+                <div id="scopeList" class="technician-list"></div>
+                <span asp-validation-for="Report.ScopesOfWork" class="field-error delivery-items-error"></span>
+                <div class="form-inline-actions">
+                    <button type="button" class="button button-secondary button-small" id="addScope">＋ Add scope of work</button>
+                    <button type="button" class="button button-danger-soft button-small" id="removeScope">Remove last</button>
                 </div>
             </section>
 
             <section class="form-section" aria-labelledby="techniciansHeading">
                 <div class="form-section-heading">
-                    <span>02</span>
-                    <div>
-                        <h3 id="techniciansHeading">Technicians</h3>
-                        <p>Add up to ten technicians assigned to this job.</p>
-                    </div>
+                    <span>03</span>
+                    <div><h3 id="techniciansHeading">Technicians</h3><p>Type a name to see previously used technicians.</p></div>
                 </div>
-
-                <div id="technician-list" class="technician-list">
-                    <div class="technician-row">
-                        <div class="field">
-                            <label for="Technician_0_">Technician 1</label>
-                            <input type="text" id="Technician_0_" name="Technician[0]" placeholder="Full name" required />
-                        </div>
-                    </div>
-                </div>
+                <div id="technicianList" class="technician-list"></div>
+                <span asp-validation-for="Report.Technicians" class="field-error delivery-items-error"></span>
                 <div class="form-inline-actions">
                     <button type="button" class="button button-secondary button-small" id="addTechnician">＋ Add technician</button>
                     <button type="button" class="button button-danger-soft button-small" id="removeTechnician">Remove last</button>
                 </div>
             </section>
 
-            <section class="form-section" aria-labelledby="inventoryDetailsHeading">
-                <div class="form-section-heading">
-                    <span>03</span>
-                    <div>
-                        <h3 id="inventoryDetailsHeading">Inventory movement</h3>
-                        <p>Record the item associated with this service report.</p>
-                    </div>
-                </div>
-
-                <div class="form-grid">
-                    <div class="field">
-                        <label asp-for="Item">Item name</label>
-                        <input type="text" asp-for="Item" placeholder="Product or part name" required />
-                    </div>
-                    <div class="field">
-                        <label asp-for="Supplier">Supplier</label>
-                        <input type="text" asp-for="Supplier" placeholder="Supplier name" required />
-                    </div>
-                    <div class="field field-span-2">
-                        <label asp-for="Description">Description</label>
-                        <textarea asp-for="Description" rows="2" placeholder="Item details or specification" required></textarea>
-                    </div>
-                    <div class="field">
-                        <label asp-for="Date">Movement date</label>
-                        <input type="date" asp-for="Date" required />
-                    </div>
-                    <div class="field">
-                        <label asp-for="Location">Location</label>
-                        <input type="text" asp-for="Location" placeholder="Storage or job site" required />
-                    </div>
-                    <div class="field">
-                        <label asp-for="Quantity">Quantity</label>
-                        <input type="number" asp-for="Quantity" min="1" step="1" placeholder="0" required />
-                    </div>
-                    <div class="field">
-                        <label asp-for="Price">Unit price</label>
-                        <div class="input-prefix">
-                            <span>₱</span>
-                            <input type="number" asp-for="Price" min="0" step="0.01" placeholder="0.00" required />
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <section class="form-section" aria-labelledby="referenceDetailsHeading">
+            <section class="form-section" aria-labelledby="deliveryReferenceHeading">
                 <div class="form-section-heading">
                     <span>04</span>
-                    <div>
-                        <h3 id="referenceDetailsHeading">Document reference</h3>
-                        <p>Enter either a delivery receipt or invoice number.</p>
-                    </div>
+                    <div><h3 id="deliveryReferenceHeading">Delivery receipt</h3><p>The items recorded under this DR will be shown with the service report.</p></div>
                 </div>
-
                 <div class="form-grid">
                     <div class="field">
-                        <label asp-for="DeliveryReceipt">Delivery receipt</label>
-                        <input type="number" asp-for="DeliveryReceipt" min="0" placeholder="Receipt number" />
-                    </div>
-                    <div class="field">
-                        <label asp-for="InVoice">Invoice</label>
-                        <input type="number" asp-for="InVoice" min="0" placeholder="Invoice number" />
+                        <label asp-for="Report.DeliveryReceipt">DR number</label>
+                        <input asp-for="Report.DeliveryReceipt" type="number" min="1" step="1" placeholder="Required" />
+                        <span asp-validation-for="Report.DeliveryReceipt" class="field-error"></span>
                     </div>
                 </div>
-                <p class="form-hint">Delivery receipts add stock. Invoices remove stock.</p>
             </section>
         </div>
 
         <div class="dialog-footer">
             <button type="button" class="button button-ghost" id="reportCancel">Cancel</button>
-            <button type="submit" class="button button-primary">Save report</button>
+            <button type="submit" class="button button-primary">Save service report</button>
         </div>
     </form>
 </dialog>
 
 <section class="surface-card">
     <div class="surface-header">
-        <div>
-            <p class="section-kicker">Completed work</p>
-            <h2>Service report history</h2>
-        </div>
-        <span class="record-count">@reportCount @(reportCount == 1 ? "report" : "reports")</span>
+        <div><p class="section-kicker">Completed work</p><h2>Service report history</h2></div>
+        <span class="record-count">@Model.Records.Count @(Model.Records.Count == 1 ? "report" : "reports")</span>
     </div>
-
     <div class="table-responsive">
-        <table class="data-table service-table">
-            <thead>
-                <tr>
-                    <th scope="col">Technicians</th>
-                    <th scope="col">Scope of Work</th>
-                    <th scope="col">Details</th>
-                    <th scope="col">Client</th>
-                    <th scope="col">Service Receipt</th>
-                </tr>
-            </thead>
+        <table class="data-table service-table data-table-wide">
+            <thead><tr><th>Service receipt</th><th>Technicians</th><th>Scope of work</th><th>Schedule</th><th>Client</th><th>Delivery receipt items</th></tr></thead>
             <tbody>
-                @if (Model.Records == null || Model.Records.Count == 0)
+            @if (Model.Records.Count == 0)
+            {
+                <tr><td colspan="6" class="empty-state">No service reports are available yet.</td></tr>
+            }
+            else
+            {
+                @foreach (var row in Model.Records)
                 {
                     <tr>
-                        <td colspan="6" class="empty-state">No service reports are available yet.</td>
+                        <td><span class="reference-code">@row.ServiceReceipt</span></td>
+                        <td><div class="technician-stack">@foreach (var technician in row.Technicians) { <span>@technician</span> }</div></td>
+                        <td class="description-cell">@foreach (var scope in row.ScopesOfWork) { <span class="table-detail">@scope</span> }</td>
+                        <td><span class="table-detail">@row.DateStarted.ToString("yyyy-MM-dd")—@row.DateEnded.ToString("yyyy-MM-dd")</span><span class="table-detail">@row.TimeIn.ToString(@"hh\:mm")—@row.TimeOut.ToString(@"hh\:mm")</span></td>
+                        <td><strong class="item-name">@row.Customer</strong><span class="table-detail">@row.Address</span></td>
+                        <td>
+                            @if (!row.DeliveryReceipt.HasValue)
+                            {
+                                <span class="table-detail">No input</span>
+                            }
+                            else
+                            {
+                                <strong class="item-name">DR @row.DeliveryReceipt</strong>
+                                @if (row.DeliveryItems.Count == 0)
+                                {
+                                    <span class="table-detail">No items found</span>
+                                }
+                                @foreach (var item in row.DeliveryItems)
+                                {
+                                    <span class="table-detail">@item.ItemName (@item.ItemId) · @item.Quantity.ToString("N0") units · @(item.Total.HasValue ? item.Total.Value.ToString("C", pesoCulture) : "No input")</span>
+                                }
+                            }
+                        </td>
                     </tr>
                 }
-                else
-                {
-                    @foreach (var row in Model.Records)
-                    {
-                        <tr>
-                            <td>
-                                <div class="technician-stack">
-                                    <span class="table-detail">@row.ServiceReport.technician</span>
-                                    @* @foreach (var tech in row.Technicians)
-                                    {
-                                        <span>@tech</span>
-                                    } *@
-                                </div>
-                            </td>
-                            <td>
-
-                                <div class="technician-stack">
-                                    @foreach (var sow in row.ScopesOfWork)
-                                    {
-                                        <span>@sow</span>
-                                    }
-                                </div>
-                            </td>
-                            <td>
-                                <span class="table-detail">@row.ServiceReport.dateStarted—@row.ServiceReport.dateEnded</span>
-                                <span class="table-detail">@row.ServiceReport.timeIn—@row.ServiceReport.timeOut</span>
-
-                            </td>
-                            <td>
-                                <strong class="item-name">@row.ServiceReport.client_name</strong>
-                                <span class="table-detail">@row.ServiceReport.client_location</span>
-                            </td>
-                            <td>
-                                <span class="reference-code">@row.ServiceReport.serviceReceipt</span>
-                            </td>
-                        </tr>
-                    }
-                }
+            }
             </tbody>
         </table>
     </div>
 </section>
 
 @section Scripts {
+    <partial name="_ValidationScriptsPartial" />
     <script>
         (() => {
+            const clients = @Html.Raw(clientCatalogJson);
+            const knownTechnicians = @Html.Raw(technicianSuggestionsJson);
+            const initialTechnicians = @Html.Raw(initialTechniciansJson);
+            const initialScopes = @Html.Raw(initialScopesJson);
             const dialog = document.getElementById("reportWindow");
-            const openButton = document.getElementById("reportAdd");
-            const closeButton = document.getElementById("reportClose");
-            const cancelButton = document.getElementById("reportCancel");
-            const addButton = document.getElementById("addTechnician");
-            const removeButton = document.getElementById("removeTechnician");
-            const container = document.getElementById("technician-list");
-            let technicianIndex = 1;
+            const technicianList = document.getElementById("technicianList");
+            const scopeList = document.getElementById("scopeList");
+            const clientInput = document.getElementById("serviceClient");
+            const addressInput = document.getElementById("serviceAddress");
+            const clientSuggestions = document.getElementById("clientSuggestions");
+            const normalise = value => (value || "").normalize("NFKD").toLocaleLowerCase().trim();
 
-            const closeDialog = () => dialog.close();
+            const rank = (values, query, getText = value => value) => {
+                const search = normalise(query);
+                if (!search) return [];
+                return values.map(value => {
+                    const text = normalise(getText(value));
+                    let score = 99;
+                    if (text === search) score = 0;
+                    else if (text.startsWith(search)) score = 1;
+                    else if (text.split(/\s+/).some(word => word.startsWith(search))) score = 2;
+                    else if (text.includes(search)) score = 3;
+                    return { value, score };
+                }).filter(match => match.score < 99)
+                  .sort((a, b) => a.score - b.score || getText(a.value).localeCompare(getText(b.value)))
+                  .slice(0, 8).map(match => match.value);
+            };
 
-            openButton.addEventListener("click", () => dialog.showModal());
-            closeButton.addEventListener("click", closeDialog);
-            cancelButton.addEventListener("click", closeDialog);
+            const renderTextSuggestions = (input, box, values) => {
+                const matches = rank(values, input.value);
+                box.replaceChildren();
+                matches.forEach(value => {
+                    const option = document.createElement("button");
+                    option.type = "button";
+                    option.className = "product-suggestion";
+                    option.textContent = value;
+                    option.addEventListener("mousedown", event => {
+                        event.preventDefault();
+                        input.value = value;
+                        box.hidden = true;
+                    });
+                    box.appendChild(option);
+                });
+                box.hidden = matches.length === 0;
+            };
 
-            dialog.addEventListener("click", event => {
-                if (event.target === dialog) closeDialog();
-            });
+            const wireTextSuggestions = (input, box, values) => {
+                input.addEventListener("input", () => renderTextSuggestions(input, box, values));
+                input.addEventListener("focus", () => renderTextSuggestions(input, box, values));
+                input.addEventListener("blur", () => window.setTimeout(() => box.hidden = true, 120));
+            };
 
-            addButton.addEventListener("click", () => {
-                if (technicianIndex >= 10) return;
+            const showClients = () => {
+                const search = normalise(clientInput.value);
+                const matches = !search ? [] : clients.map(client => {
+                    const name = normalise(client.name);
+                    const address = normalise(client.address);
+                    let score = 99;
+                    if (name === search) score = 0;
+                    else if (name.startsWith(search)) score = 1;
+                    else if (name.split(/\s+/).some(word => word.startsWith(search))) score = 2;
+                    else if (name.includes(search)) score = 3;
+                    else if (address.includes(search)) score = 4;
+                    return { client, score };
+                }).filter(match => match.score < 99)
+                  .sort((a, b) => a.score - b.score || a.client.name.localeCompare(b.client.name) || a.client.address.localeCompare(b.client.address))
+                  .slice(0, 8).map(match => match.client);
 
+                clientSuggestions.replaceChildren();
+                matches.forEach(client => {
+                    const option = document.createElement("button");
+                    option.type = "button";
+                    option.className = "product-suggestion";
+                    option.setAttribute("role", "option");
+                    const name = document.createElement("strong");
+                    name.textContent = client.name;
+                    const address = document.createElement("span");
+                    address.textContent = client.address;
+                    option.append(name, address);
+                    option.addEventListener("mousedown", event => {
+                        event.preventDefault();
+                        clientInput.value = client.name;
+                        addressInput.value = client.address;
+                        clientSuggestions.hidden = true;
+                        addressInput.focus();
+                    });
+                    clientSuggestions.appendChild(option);
+                });
+                clientSuggestions.hidden = matches.length === 0;
+            };
+
+            const reindexTechnicians = () => {
+                technicianList.querySelectorAll(".technician-row").forEach((row, index) => {
+                    row.querySelector("label").textContent = `Technician ${index + 1}`;
+                    row.querySelector("input").name = `Report.Technicians[${index}]`;
+                });
+                document.getElementById("removeTechnician").disabled = technicianList.children.length <= 1;
+            };
+
+            const addTechnicianRow = value => {
                 const row = document.createElement("div");
                 row.className = "technician-row";
-                row.innerHTML = `
-                    <div class="field">
-                        <label for="Technician_${technicianIndex}_">Technician ${technicianIndex + 1}</label>
-                        <input type="text" id="Technician_${technicianIndex}_" name="Technician[${technicianIndex}]" placeholder="Full name" required />
-                    </div>`;
-                container.appendChild(row);
-                technicianIndex++;
-                row.querySelector("input").focus();
+                const field = document.createElement("div");
+                field.className = "field product-picker";
+                const label = document.createElement("label");
+                const input = document.createElement("input");
+                input.type = "text";
+                input.maxLength = 200;
+                input.autocomplete = "off";
+                input.placeholder = "Start typing a technician name";
+                input.required = true;
+                input.value = value || "";
+                const box = document.createElement("div");
+                box.className = "product-suggestions";
+                box.setAttribute("role", "listbox");
+                box.hidden = true;
+                field.append(label, input, box);
+                row.appendChild(field);
+                technicianList.appendChild(row);
+                wireTextSuggestions(input, box, knownTechnicians);
+                reindexTechnicians();
+                return input;
+            };
+
+            const reindexScopes = () => {
+                scopeList.querySelectorAll(".scope-row").forEach((row, index) => {
+                    row.querySelector("label").textContent = `Scope of work ${index + 1}`;
+                    row.querySelector("textarea").name = `Report.ScopesOfWork[${index}]`;
+                });
+                document.getElementById("removeScope").disabled = scopeList.children.length <= 1;
+            };
+
+            const addScopeRow = value => {
+                const row = document.createElement("div");
+                row.className = "scope-row";
+                const field = document.createElement("div");
+                field.className = "field";
+                const label = document.createElement("label");
+                const input = document.createElement("textarea");
+                input.rows = 3;
+                input.maxLength = 2000;
+                input.placeholder = "Describe the work completed";
+                input.required = true;
+                input.value = value || "";
+                field.append(label, input);
+                row.appendChild(field);
+                scopeList.appendChild(row);
+                reindexScopes();
+                return input;
+            };
+
+            clientInput.addEventListener("input", showClients);
+            clientInput.addEventListener("focus", showClients);
+            clientInput.addEventListener("blur", () => window.setTimeout(() => clientSuggestions.hidden = true, 120));
+
+            document.getElementById("addTechnician").addEventListener("click", () => {
+                if (technicianList.children.length >= 10) return;
+                addTechnicianRow("").focus();
+            });
+            document.getElementById("removeTechnician").addEventListener("click", () => {
+                if (technicianList.children.length <= 1) return;
+                technicianList.lastElementChild.remove();
+                reindexTechnicians();
             });
 
-            removeButton.addEventListener("click", () => {
-                const rows = container.querySelectorAll(".technician-row");
-                if (rows.length <= 1) return;
-
-                rows[rows.length - 1].remove();
-                technicianIndex--;
+            document.getElementById("addScope").addEventListener("click", () => {
+                if (scopeList.children.length >= 20) return;
+                addScopeRow("").focus();
             });
+            document.getElementById("removeScope").addEventListener("click", () => {
+                if (scopeList.children.length <= 1) return;
+                scopeList.lastElementChild.remove();
+                reindexScopes();
+            });
+
+            (initialScopes.length ? initialScopes : [""]).forEach(addScopeRow);
+            (initialTechnicians.length ? initialTechnicians : [""]).forEach(addTechnicianRow);
+            document.getElementById("reportAdd").addEventListener("click", () => dialog.showModal());
+            const closeDialog = () => dialog.close();
+            document.getElementById("reportClose").addEventListener("click", closeDialog);
+            document.getElementById("reportCancel").addEventListener("click", closeDialog);
+            dialog.addEventListener("click", event => { if (event.target === dialog) closeDialog(); });
+
+            if (@Model.OpenReportDialog.ToString().ToLowerInvariant()) dialog.showModal();
         })();
     </script>
 }

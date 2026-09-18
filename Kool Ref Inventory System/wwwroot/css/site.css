@@ -516,7 +516,8 @@ a {
 }
 
 .field input,
-.field textarea {
+.field textarea,
+.field select {
     width: 100%;
     min-height: 43px;
     padding: 10px 12px;
@@ -539,10 +540,41 @@ a {
 }
 
 .field input:focus,
-.field textarea:focus {
+.field textarea:focus,
+.field select:focus {
     outline: 0;
     border-color: var(--blue-600);
     box-shadow: 0 0 0 3px rgba(40, 118, 199, 0.12);
+}
+
+.account-dialog {
+    width: min(720px, calc(100vw - 32px));
+}
+
+.account-type-badge {
+    display: inline-flex;
+    padding: 5px 9px;
+    color: var(--navy-800);
+    background: var(--blue-100);
+    border-radius: 7px;
+    font-size: 0.74rem;
+    font-weight: 750;
+}
+
+.access-denied-card {
+    max-width: 620px;
+    margin: 48px auto;
+    padding: 36px;
+}
+
+.access-denied-card h1 {
+    margin: 0 0 10px;
+    color: var(--navy-950);
+}
+
+.access-denied-card p:not(.eyebrow) {
+    margin: 0 0 22px;
+    color: var(--slate-500);
 }
 
 .technician-list {

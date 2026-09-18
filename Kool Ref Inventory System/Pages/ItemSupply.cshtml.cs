@@ -169,11 +169,13 @@ namespace Kool_Ref_Inventory_System.Pages
             using var connection = new SqlConnection(_connectionString);
             connection.Open();
 
+            // Searches using itemname or itemId, case-insensitive, with wildcards.
             const string query = @"
                 SELECT itemId, [name], price
                 FROM dbo.ItemList
                 WHERE @searchPattern IS NULL
-                   OR [name] LIKE @searchPattern ESCAPE '\'
+                   OR ([name] LIKE @searchPattern ESCAPE '\')
+                    or itemId like @searchPattern escape '\'
                 ORDER BY [name], itemId;";
 
             using var command = new SqlCommand(query, connection);

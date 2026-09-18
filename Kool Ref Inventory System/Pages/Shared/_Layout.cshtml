@@ -1,6 +1,7 @@
 @{
     var currentPage = ViewContext.RouteData.Values["page"]?.ToString();
     var pageTitle = ViewData["Title"]?.ToString() ?? "Operations";
+    var isBoss = Context.Session.GetString("UserType") == "B";
 }
 <!DOCTYPE html>
 <html lang="en">
@@ -44,6 +45,13 @@
                             <a class="nav-link @(currentPage == "/Service" ? "active" : null)" asp-area="" asp-page="/Service"
                                aria-current="@(currentPage == "/Service" ? "page" : null)">Service reports</a>
                         </li>
+                        @if (isBoss)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link @(currentPage == "/Accounts" ? "active" : null)" asp-area="" asp-page="/Accounts"
+                                   aria-current="@(currentPage == "/Accounts" ? "page" : null)">User accounts</a>
+                            </li>
+                        }
                     </ul>
                     <span class="portal-badge d-none d-lg-inline-flex">
                         <span class="portal-badge-dot" aria-hidden="true"></span>
