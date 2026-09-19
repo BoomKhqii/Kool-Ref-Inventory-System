@@ -732,6 +732,19 @@ a {
     background: #f9fbfd;
 }
 
+.inventory-ledger .delivery-shared-cell {
+    vertical-align: top;
+    border-bottom: 0;
+}
+
+.inventory-ledger .delivery-group + .delivery-group > tr:first-child > td {
+    border-top: 2px solid var(--slate-200);
+}
+
+.inventory-ledger .delivery-group:hover {
+    background: #f9fbfd;
+}
+
 .item-name {
     color: var(--navy-900);
     font-weight: 700;

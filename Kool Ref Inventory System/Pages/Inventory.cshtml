@@ -4,7 +4,8 @@
 @model InventoryModel
 @{
     ViewData["Title"] = "Inventory ledger";
-    var recordCount = Model.Inventory.Count;
+    var deliveries = Model.Inventory.GroupBy(item => item.deliveryReceipt).ToList();
+    var deliveryCount = deliveries.Count;
     var unitsProcessed = Model.Inventory.Sum(item => item.itemQuantity);
     var pesoCulture = CultureInfo.GetCultureInfo("en-PH");
     var productCatalogJson = JsonSerializer.Serialize(Model.ProductCatalog, new JsonSerializerOptions
@@ -39,7 +40,7 @@
 }
 
 <section class="compact-metrics" aria-label="Inventory summary">
-    <div><span>Ledger records</span><strong>@recordCount.ToString("N0")</strong></div>
+    <div><span>Delivery receipts</span><strong>@deliveryCount.ToString("N0")</strong></div>
     <div><span>Units processed</span><strong>@unitsProcessed.ToString("N0")</strong></div>
 </section>
 
@@ -113,11 +114,11 @@
             <p class="section-kicker">Transaction history</p>
             <h2>All inventory records</h2>
         </div>
-        <span class="record-count">@recordCount @(recordCount == 1 ? "record" : "records")</span>
+        <span class="record-count">@deliveryCount @(deliveryCount == 1 ? "receipt" : "receipts")</span>
     </div>
 
     <div class="table-responsive">
-        <table class="data-table data-table-wide">
+        <table class="data-table data-table-wide inventory-ledger">
             <thead>
                 <tr>
                     <th scope="col">Delivery receipt</th>
@@ -129,37 +130,47 @@
                     <th scope="col">Total price</th>
                 </tr>
             </thead>
-            <tbody>
-                @if (Model.Inventory.Count == 0)
-                {
+            @if (deliveryCount == 0)
+            {
+                <tbody>
                     <tr>
                         <td colspan="7" class="empty-state">No inventory transactions are available yet.</td>
                     </tr>
-                }
-                else
+                </tbody>
+            }
+            else
+            {
+                @foreach (var delivery in deliveries)
                 {
-                    @foreach (var item in Model.Inventory)
-                    {
-                        <tr>
-                            <td><span class="reference-code">@item.deliveryReceipt</span></td>
-                            <td class="no-wrap">@item.delivery_date</td>
-                            <td class="description-cell">@item.delivery_location</td>
-                            <td><strong class="item-name">@item.itemName</strong></td>
-                            <td class="no-wrap">
-                                @(item.itemPricePerX.HasValue
-                                    ? item.itemPricePerX.Value.ToString("C", pesoCulture)
-                                    : "No input")
-                            </td>
-                            <td><span class="quantity-chip">@item.itemQuantity.ToString("N0")</span></td>
-                            <td class="no-wrap">
-                                @(item.itemTotal.HasValue
-                                    ? item.itemTotal.Value.ToString("C", pesoCulture)
-                                    : "No input")
-                            </td>
-                        </tr>
-                    }
+                    var items = delivery.ToList();
+                    <tbody class="delivery-group">
+                        @for (var index = 0; index < items.Count; index++)
+                        {
+                            var item = items[index];
+                            <tr>
+                                @if (index == 0)
+                                {
+                                    <td rowspan="@items.Count" class="delivery-shared-cell"><span class="reference-code">@delivery.Key</span></td>
+                                    <td rowspan="@items.Count" class="delivery-shared-cell no-wrap">@item.delivery_date</td>
+                                    <td rowspan="@items.Count" class="delivery-shared-cell description-cell">@item.delivery_location</td>
+                                }
+                                <td><strong class="item-name">@item.itemName</strong></td>
+                                <td class="no-wrap">
+                                    @(item.itemPricePerX.HasValue
+                                        ? item.itemPricePerX.Value.ToString("C", pesoCulture)
+                                        : "No input")
+                                </td>
+                                <td><span class="quantity-chip">@item.itemQuantity.ToString("N0")</span></td>
+                                <td class="no-wrap">
+                                    @(item.itemTotal.HasValue
+                                        ? item.itemTotal.Value.ToString("C", pesoCulture)
+                                        : "No input")
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
                 }
-            </tbody>
+            }
         </table>
     </div>
 </section>
